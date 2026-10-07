@@ -1,0 +1,4 @@
+qa/
+__pycache__/
+assets/video/dv-hero.mp4
+.DS_Store
