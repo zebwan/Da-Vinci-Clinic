@@ -143,7 +143,8 @@ def plans(c, d):
 def team(c, d, active=0):
     r = rel(d)
     cards = ''.join(f'<a class="tcard{" is-active" if i == active else ""}" href="{r}doctors/#{m["id"]}">{img(r + m["img"], m["alt"], 914, 1080)}<div class="tcard__name"><h4>{esc(m["name"])}</h4><p>{esc(m["role"])}</p></div></a>' for i, m in enumerate(c['members']))
-    return f'<section class="sec sec--lg" id="team"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}<div class="team rv">{cards}</div></div></section>'
+    few = ' team--few' if len(c['members']) < 4 else ''
+    return f'<section class="sec sec--lg" id="team"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}<div class="team rv{few}">{cards}</div></div></section>'
 
 def testimonials(c, d):
     r = rel(d)
@@ -302,6 +303,7 @@ def main():
     urls = ''.join(f'<url><loc>{SITE["url"]}/{(p["slug"].strip("/") + "/") if p["slug"] else ""}</loc></url>' for p in PAGES if not p.get('noindex'))
     open(os.path.join(OUT, 'sitemap.xml'), 'w').write(f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
     open(os.path.join(OUT, 'robots.txt'), 'w').write(f'User-agent: *\nAllow: /\nSitemap: {SITE["url"]}/sitemap.xml\n')
+    open(os.path.join(OUT, '.nojekyll'), 'w').write('')
     # mirror for the preview server
     os.makedirs(MIRROR, exist_ok=True)
     os.system(f'rsync -a --delete "{OUT}/" "{MIRROR}/"')
