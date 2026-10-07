@@ -44,14 +44,14 @@ def img(src, alt, w=None, h=None, cls='', lazy=True):
 def header(d, dark=False):
     r = rel(d)
     links = ''.join(f'<a href="{r}{h}">{esc(l)}</a>' for l, h in NAV)
-    mlinks = ''.join(f'<a href="{r}{h}">{esc(l)}</a>' for l, h in NAV) + f'<a class="mnav__cta" href="{r}contact/">Book a Consultation</a>'
+    mlinks = ''.join(f'<a href="{r}{h}">{esc(l)}</a>' for l, h in NAV)
     logo = 'logo-white.png' if dark else 'logo-navy.png'
     return (f'<header class="header{" header--dark" if dark else ""}"><div class="header__in">'
             f'<a class="header__logo" href="{r}" aria-label="Da Vinci Clinic home"><img src="{r}assets/img/logo-white.png" alt="Da Vinci Clinic" class="logo-mobile"><img src="{r}assets/img/{logo}" alt="Da Vinci Clinic" class="logo-desktop"></a>'
             f'<nav class="nav" aria-label="Main">{links}</nav>'
             f'<div class="header__cta">{btn("Book a Consultation", r + "contact/", "btn--glass" if not dark else "btn--white")}'
             f'<button class="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button></div>'
-            f'</div></header><nav class="mnav" aria-label="Mobile">{mlinks}</nav>')
+            f'</div><nav class="mnav" aria-label="Mobile">{mlinks}</nav></header>')
 
 def footer(d):
     r = rel(d)
@@ -74,7 +74,7 @@ def hero_home(c, d):
             f'<div class="hero__in"><div class="hero__left"><div class="hero__top">'
             f'<span class="hero__tag rv d4">{esc(c["tag"])}</span>'
             f'<h1><span class="rv">{esc(c["h1"][0])}</span><span class="line2 rv d1">{MARK.replace("{r}", r)}<span>{esc(c["h1"][1])}</span></span><span class="rv d2">{esc(c["h1"][2])}</span></h1></div>'
-            f'<div class="hero__bottom"><div class="hero__proof rv d4"><div class="avatars">{avs}</div><div><h4>{esc(c["proof_big"])}</h4><p>{esc(c["proof_small"])}</p></div></div></div></div>'
+            f'<div class="hero__bottom"><div class="hero__proof rv d4"><div class="avatars">{avs}</div><div><h4>{esc(c["proof_big"])}</h4><p><span class="proof-long">{esc(c["proof_small"])}</span><span class="proof-short">{esc(c.get("proof_short", c["proof_small"]))}</span></p></div></div></div></div>'
             f'<div class="hero__right"><p class="rv d3">{esc(c["text"])}</p><div class="rv d4">{btn(c["cta"], r + "contact/", "btn--gold")}</div></div></div></section>')
 
 def ihero(c, d):

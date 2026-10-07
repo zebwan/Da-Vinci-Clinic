@@ -5,13 +5,17 @@
   const isPhone = () => window.innerWidth < 768;
 
   /* ---- mobile menu ---- */
-  const burger = document.querySelector('.burger');
+  const burger = document.querySelector('.burger'), header = document.querySelector('.header'), mnav = document.querySelector('.mnav');
   if (burger) {
-    burger.addEventListener('click', () => {
-      const open = document.body.classList.toggle('menu-open');
+    /* template: the fixed bar itself grows from 64 to the full panel height (.6s ease-in-out) while the link list slides up 66px */
+    const setMenu = (open) => {
+      document.body.classList.toggle('menu-open', open);
       burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-    document.querySelectorAll('.mnav a').forEach(a => a.addEventListener('click', () => document.body.classList.remove('menu-open')));
+      header.style.height = open ? (header.querySelector('.header__in').offsetHeight + mnav.offsetHeight) + 'px' : '';
+    };
+    burger.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
+    document.querySelectorAll('.mnav a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+    window.addEventListener('resize', () => { if (window.innerWidth >= 1200 && document.body.classList.contains('menu-open')) setMenu(false); });
   }
 
   /* ---- reveals: opacity .001 translateY(200) scale(.7) → identity, 2s ease [.16,1,.3,1], stagger .1 ---- */
@@ -30,9 +34,9 @@
     requestAnimationFrame(() => {
       heroBg.style.transition = 'transform 2s cubic-bezier(.16,1,.3,1)';
       heroBg.style.transform = 'scale(1)';
-      if (heroCut) { heroCut.style.transition = 'opacity 1.2s cubic-bezier(.16,1,.3,1), transform 2s cubic-bezier(.16,1,.3,1)'; heroCut.style.opacity = '1'; heroCut.style.transform = isPhone() ? 'none' : 'translateX(-50%) translateY(0)'; }
+      if (heroCut) { heroCut.style.transition = 'opacity 1.2s cubic-bezier(.16,1,.3,1), transform 2s cubic-bezier(.16,1,.3,1)'; heroCut.style.opacity = '1'; heroCut.style.transform = window.innerWidth < 1200 ? 'none' : 'translateX(-50%) translateY(0)'; }
     });
-  } else if (heroCut) { heroCut.style.opacity = '1'; heroCut.style.transform = isPhone() ? 'none' : 'translateX(-50%)'; }
+  } else if (heroCut) { heroCut.style.opacity = '1'; heroCut.style.transform = window.innerWidth < 1200 ? 'none' : 'translateX(-50%)'; }
 
   /* ---- count-up (≈0.6s, ease-out) ---- */
   const counters = document.querySelectorAll('[data-count]');
