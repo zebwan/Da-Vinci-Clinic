@@ -143,7 +143,9 @@
     sl.addEventListener('focusin', () => { paused = true; }); sl.addEventListener('focusout', () => { paused = false; });
     let x0 = null;
     track.addEventListener('pointerdown', e => { x0 = e.clientX; });
-    track.addEventListener('pointerup', e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1), true); });
+    let dragged = false;
+    track.addEventListener('pointerup', e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; dragged = Math.abs(dx) > 40; if (dragged) go(i + (dx < 0 ? 1 : -1), true); });
+    track.addEventListener('click', e => { if (dragged) { e.preventDefault(); dragged = false; } }, true);   /* a swipe on a linked banner is not a click */
     new IntersectionObserver(es => es.forEach(en => { inView = en.isIntersecting; }), { threshold: .35 }).observe(sl);
     window.addEventListener('resize', () => go(i));
     go(0);

@@ -140,6 +140,24 @@ def approach(c, d):
     return (f'<section class="sec sig" id="{c.get("id","approach")}"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}'
             f'<div class="sig__slider rv" data-interval="6000" aria-roledescription="carousel"><div class="sig__track">{slides}</div><div class="sig__ctrl"><div class="sig__tabs">{tabs}</div>{nav}</div></div></div></section>')
 
+def promos(c, d):
+    """What's on: the clinic's promo banners as an auto-playing slider (wide on desktop and tablet, square on phone)."""
+    r = rel(d)
+    def slide(it, i):
+        lazy = '' if i == 0 else ' loading="lazy"'
+        return (f'<a class="slide promo__slide{" is-active" if i == 0 else ""}" href="{r}{it["href"]}" aria-label="{esc(it["alt"])}">'
+                f'<picture><source media="(max-width: 767.98px)" srcset="{r}assets/img/promo-{it["key"]}-sq.webp" width="1080" height="1080">'
+                f'<img src="{r}assets/img/promo-{it["key"]}.webp" alt="{esc(it["alt"])}" width="1600" height="746"{lazy} decoding="async"></picture></a>')
+    slides = ''.join(slide(it, i) for i, it in enumerate(c['items']))
+    tabs = ''.join(f'<button class="sig__tab{" is-active" if i == 0 else ""}" data-go="{i}"><span>{esc(it["tab"])}</span><b class="sig__bar"><i></i></b></button>' for i, it in enumerate(c['items']))
+    nav = f'<div class="sig__nav"><button class="slider__btn sig__prev" aria-label="Previous">{ARROW_L}</button><button class="slider__btn sig__next" aria-label="Next">{ARROW_R}</button></div>'
+    more = btn(c['more'], r + c['more_href'], 'btn--gold btn--sm') if c.get('more') else ''
+    headrow = (f'<div class="row rv promo__head"><div class="head head--left"><div class="head__tag"><span class="eyebrow">{esc(c["eyebrow"])}</span><h2>{esc(c["title"])}</h2></div>'
+               f'<p>{esc(c["text"])}</p></div>{more}</div>')
+    return (f'<section class="sec sig promo" id="whats-on"><div class="wrap col">{headrow}'
+            f'<div class="sig__slider rv" data-interval="5000" aria-roledescription="carousel"><div class="sig__track">{slides}</div>'
+            f'<div class="sig__ctrl"><div class="sig__tabs">{tabs}</div>{nav}</div></div></div></section>')
+
 def plans(c, d):
     r = rel(d)
     def plan(p, i):
@@ -257,7 +275,7 @@ def notice(c, d):
     return f'<section class="sec" style="padding-top:0"><div class="wrap"><div class="notice rv">{c["html"]}</div></div></section>'
 
 COMPONENTS = {k: v for k, v in globals().items() if callable(v) and k in (
-    'hero_home', 'ihero', 'about_block', 'services', 'why', 'benefit', 'work', 'approach', 'plans', 'team', 'testimonials', 'journey', 'faq', 'posts', 'cta',
+    'hero_home', 'ihero', 'promos', 'about_block', 'services', 'why', 'benefit', 'work', 'approach', 'plans', 'team', 'testimonials', 'journey', 'faq', 'posts', 'cta',
     'split', 'sticky_rows', 'stats_row', 'detail_cards', 'contact_block', 'info_grid', 'map_block', 'gallery', 'az', 'article', 'featured', 'posts_grid', 'notice')}
 
 # ---------------------------------------------------------------- page shell

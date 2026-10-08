@@ -383,10 +383,27 @@ SERVICE_PAGES = [
 ]
 
 # ------------------------------------------------------------------ other pages
+# What's on: the clinic's own homepage banners (their current slider), each linked to the matching page in this site.
+# The TRX "opening soon" banner is left out: the TRX branch page describes the clinic as open.
+PROMOS = {'eyebrow': "What's on", 'title': 'Promotions and new treatments', 'text': 'Current offers and the newest technology at our four clinics.',
+          'more': 'All promotions', 'more_href': 'promotions/', 'items': [
+    {'key': 'hsbc', 'tab': 'HSBC', 'href': 'promotions/', 'alt': 'Da Vinci Clinic x HSBC: exclusive privileges for HSBC cardholders'},
+    {'key': 'xerf', 'tab': 'XERF', 'href': 'facelift-skin-tightening/', 'alt': 'XERF by Cynosure Lutronic: lift, tighten and tone'},
+    {'key': 'ultherapy', 'tab': 'Ultherapy', 'href': 'facelift-skin-tightening/', 'alt': 'Ultherapy Prime at Da Vinci Clinic'},
+    {'key': 'picosure', 'tab': 'PicoSure', 'href': 'pigmentation-pico-laser/', 'alt': 'PicoSure Pro Platinum 755 nm picosecond laser'},
+    {'key': 'cellbooster', 'tab': 'Cellbooster', 'href': 'skin-boosters/', 'alt': 'Suisselle Cellbooster skin booster'},
+    {'key': 'density', 'tab': 'Density', 'href': 'facelift-skin-tightening/', 'alt': 'Jeisys Density RF skin tightening'},
+    {'key': 'oligiox', 'tab': 'Oligio X', 'href': 'facelift-skin-tightening/', 'alt': 'Oligio X radiofrequency, now at Da Vinci Clinic'},
+    {'key': 'ultraclear', 'tab': 'UltraClear', 'href': 'laser-treatments/', 'alt': 'UltraClear cold fibre laser, safe for all skin types'},
+    {'key': 'deusaderm', 'tab': 'Deusaderm', 'href': 'collagen-biostimulators/', 'alt': 'Deusaderm Lido injectable collagen gel'},
+    {'key': 'mounjaro', 'tab': 'Mounjaro', 'href': 'body-contouring-weight-loss/', 'alt': 'Mounjaro weight-loss injection, now available at Da Vinci Clinic'},
+]}
+
 HOME = {'slug': '', 'title': 'Aesthetic Clinic in Kuala Lumpur | Da Vinci Clinic, Doctor-Led Since 2006', 'desc': 'Da Vinci Clinic: doctor-led aesthetic and skin clinic in Kuala Lumpur with four branches. Non-surgical facelift, pico laser, skin boosters, fillers, body contouring and medical weight loss by LCP-certified doctors.', 'og': 'assets/img/team-wide.webp',
     'faq': FAQ_HOME, 'sections': [
         ('hero_home', {'tag': 'LCP-certified doctors since 2006', 'h1': ['Your aesthetic', 'clinic in', 'Kuala Lumpur'], 'cut_alt': 'Dr Tristan Tan, Director and Founder of Da Vinci Clinic', 'proof_big': '4 clinics', 'proof_small': 'Mid Valley · Bukit Jalil · Cheras · TRX', 'proof_short': 'across Kuala Lumpur',
                        'text': 'Doctor-led skin and aesthetic care, trusted by patients across Malaysia since 2006. Every treatment begins with an honest clinical consultation, not a sales pitch.', 'cta': 'Book a consultation'}),
+        ('promos', PROMOS),
         ('about_block', {'eyebrow': 'About Da Vinci Clinic', 'title': 'Mastering the art of science and unlocking timeless beauty', 'pills': ['No downtime', 'Patient-centric', 'Result oriented', 'Doctor-led'],
                          'stats': [{'label': 'Years of doctor-led aesthetic care in Kuala Lumpur', 'n': 20, 'suffix': ''}, {'label': 'Clinics across KL: Mid Valley, Bukit Jalil, Cheras and TRX', 'n': 4, 'suffix': ''}, {'label': 'Industry awards and recognitions listed by the clinic', 'n': 48, 'suffix': ''}]}),
         ('services', {'eyebrow': 'Signature treatments', 'title': 'Treatments our patients come for', 'text': 'Three of the five DV™ signature protocols. Every one starts with a doctor’s assessment.', 'id': 'services', 'more': 'All treatments A–Z', 'more_href': 'treatments/', 'cards': [
@@ -450,6 +467,7 @@ PROMOTIONS = {'slug': 'promotions', 'title': 'Aesthetic Treatment Promotions in 
     'breadcrumb': [('Home', '/'), ('Promotions', '/promotions/')], 'faq': {'items': [('Who is eligible for the Da Vinci Clinic x HSBC privileges?', 'Eligible HSBC Bank and HSBC Amanah Debit/Credit Card/-i cardholders aged 21 and above, subject to terms.'), ('What privileges can HSBC cardholders enjoy?', '20% off eligible treatments and products, a complimentary advanced RF skin tightening treatment worth RM800 during their birthday month, and a complimentary yellow laser treatment worth RM800 for eligible first-time customers with a minimum spend of RM400.'), ('How do I redeem?', 'Make an appointment, tell the team you wish to redeem the HSBC privilege, and pay with an eligible HSBC card.'), ('How long is the offer valid?', 'From 1 August 2026 to 31 July 2027.')]},
     'sections': [
         ('ihero', {'eyebrow': 'Promotions', 'h1': 'Promotions at Da Vinci Clinic', 'text': 'First-time patients can enjoy up to 50% off selected laser treatments, and HSBC cardholders have their own privileges until July 2027. Your doctor still assesses first.', 'image': 'assets/img/int-reception.webp', 'image_alt': 'Da Vinci Clinic TRX reception', 'crumb': 'Promotions', 'ratio': '1120/600'}),
+        ('promos', dict(PROMOS, eyebrow='Now running', title='Current promotions and launches', more=None)),
         ('plans', HOME_OFFERS),
         ('az', {'eyebrow': 'First Trial Promotions', 'title': 'Up to 50% off, for first-time patients', 'text': 'Selected skin laser treatments. Book a free consultation to confirm your eligibility.', 'groups': [
             {'title': 'Face', 'items': [('Non-surgical facelift and skin tightening', 'facelift-skin-tightening/'), ('Trifecta facelift: Ultherapy Prime, Oligio and Aptos threads', 'facelift-skin-tightening/')]},

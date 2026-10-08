@@ -28,5 +28,30 @@ JOBS = [
     # sculpted features for the non-surgical eye / nose / face page, and the sculptor at work for "Personalised care"
     ('svc-eye-wide', '2024/01/p-90.jpg', 1600, 857, .5, .4), ('benefit-art', '2024/01/p-60.jpg', 828, 1034, .60, .5),
 ]
+# homepage promo banners (their current homepage slider): wide 1824x850 for desktop, square for phone
+PROMO = [('hsbc', '2026/08/DV-x-HSBC-1.webp', '2026/08/DV-X-HSBC-Collab-Promo.webp'),
+         ('xerf', '2026/07/XERF-launching-hero.webp', '2026/07/XERF-Hero-Square.webp'),
+         ('ultherapy', '2025/11/Ultherapy-Prime-Shoutout-Banner.png', '2026/06/Ultherapy-Prime-Shoutout-Banner-Square.jpg'),
+         ('picosure', '2025/11/Picosure-Pro-Shoutout-Banner-New.png', '2026/06/Picosure-Pro-Shoutout-Banner-Square-1.jpg'),
+         ('cellbooster', '2025/11/Cellbooster-Shoutout-Banner.png', '2025/11/Cellbooster-Hero-Banner-Square.png'),
+         ('density', '2025/11/Density-Shoutout-Banner-1.png', '2026/06/Density-Shoutout-Banner-Square.jpg'),
+         ('oligiox', '2025/11/OligioX-Shoutout-Banner-1.png', '2026/06/OligioX-Shoutout-Banner-Square-1.jpg'),
+         ('ultraclear', '2025/09/UltraClear-Launching-Banner-ver-01.png', '2025/04/DV-UltraClear-Hero-Banner-Square-1.png'),
+         ('deusaderm', '2025/09/Deusaderm-Launching-Banner-ver-01.png', '2026/05/Deusaderm-Lido-Square-Banne.jpeg'),
+         ('mounjaro', '2025/09/Mounjaro-Launching-Banner-ver-02-png.avif', '2025/09/DV-Mounjaro-Hero-Banner-Square.png')]
+
+def promo(name, wide, sq):
+    out = []
+    im = ImageOps.exif_transpose(Image.open(SRC + wide)).convert('RGB'); im = im.resize((1600, round(1600 * im.height / im.width)), Image.LANCZOS)
+    im.save(OUT + f'promo-{name}.webp', quality=80, method=6); out.append((im.size, os.path.getsize(OUT + f'promo-{name}.webp') // 1024))
+    im = ImageOps.exif_transpose(Image.open(SRC + sq)).convert('RGB')
+    if im.width != im.height:   # the HSBC phone artwork is portrait: centre it on a square of its own edge colour, nothing cropped
+        edge = im.resize((1, 1), Image.BOX, box=(0, 0, 6, im.height)).getpixel((0, 0)); side = max(im.size)
+        sqim = Image.new('RGB', (side, side), edge); sqim.paste(im, ((side - im.width) // 2, (side - im.height) // 2)); im = sqim
+    im = im.resize((1080, 1080), Image.LANCZOS); im.save(OUT + f'promo-{name}-sq.webp', quality=80, method=6)
+    out.append((im.size, os.path.getsize(OUT + f'promo-{name}-sq.webp') // 1024))
+    return name, out
+
 if __name__ == '__main__':
     for j in JOBS: print(*crop(*j))
+    for p in PROMO: print(*promo(*p))
