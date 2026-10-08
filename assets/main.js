@@ -59,11 +59,10 @@
     counters.forEach(c => cio.observe(c));
   }
 
-  /* ---- How it works: sticky heading shrinks 1→.6 and fades over ~1000px (template), and in its place
-         the marble bust rises in the sticky centre; a gold line draws down the centre and lights each step ---- */
+  /* ---- How it works: sticky heading shrinks 1→.6 and fades over ~1000px (template) over the pinned sculpture film;
+         a gold line draws down the centre and lights each step ---- */
   const work = document.querySelector('.work');
   const workHead = work && work.querySelector('.head');
-  const bust = work && work.querySelector('.work__bust');
   const spine = work && work.querySelector('.work__spine');
   const line = spine && spine.querySelector('.work__line');
   const nodes = spine ? [...spine.querySelectorAll('.work__node')] : [];
@@ -86,12 +85,7 @@
       const sc = 1 - 0.4 * p, op = Math.max(0, 1 - Math.pow(p, 0.8) * 1.05);
       workHead.style.transform = 'scale(' + sc.toFixed(4) + ')';
       workHead.style.opacity = op.toFixed(3);
-      if (bust) {
-        const b = Math.min(1, Math.max(0, (p - .25) / .55));
-        bust.style.opacity = b.toFixed(3);
-        bust.style.transform = 'translateY(' + ((1 - b) * 70).toFixed(1) + 'px) scale(' + (.9 + .1 * b).toFixed(4) + ')';
-      }
-    } else if (bust) { bust.style.opacity = 1; }
+    }
     if (line) {
       const r = spine.getBoundingClientRect();
       const pen = Math.min(r.height, Math.max(0, vh * .5 - r.top));      /* the line is drawn to the middle of the screen */
@@ -111,6 +105,16 @@
     window.addEventListener('load', () => { placeNodes(); onScroll(); });
     onScroll();
   }
+
+  /* ---- pinned background film: load on approach, play only while the section is on screen ---- */
+  document.querySelectorAll('.work__bgv video').forEach(v => {
+    if (reduced) return;   /* poster only */
+    let loaded = false;
+    new IntersectionObserver(es => es.forEach(en => {
+      if (en.isIntersecting) { if (!loaded) { v.preload = 'auto'; v.load(); loaded = true; } v.play().catch(() => {}); }
+      else v.pause();
+    }), { rootMargin: '300px 0px' }).observe(v.closest('.work__bg'));
+  });
 
   /* ---- Signature treatments: auto-playing slider (6 s), pauses on hover / focus / off-screen / hidden tab, swipe on touch ---- */
   document.querySelectorAll('.sig__slider').forEach(sl => {
