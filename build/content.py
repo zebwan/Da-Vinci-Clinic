@@ -401,7 +401,7 @@ PROMOS = {'eyebrow': "What's on", 'title': 'Promotions and new treatments', 'tex
 
 HOME = {'slug': '', 'title': 'Aesthetic Clinic in Kuala Lumpur | Da Vinci Clinic, Doctor-Led Since 2006', 'desc': 'Da Vinci Clinic: doctor-led aesthetic and skin clinic in Kuala Lumpur with four branches. Non-surgical facelift, pico laser, skin boosters, fillers, body contouring and medical weight loss by LCP-certified doctors.', 'og': 'assets/img/team-wide.webp',
     'faq': FAQ_HOME, 'sections': [
-        ('hero_home', {'tag': 'LCP-certified doctors since 2006', 'h1': ['Your aesthetic', 'clinic in', 'Kuala Lumpur'], 'cut_alt': 'Dr Tristan Tan, Director and Founder of Da Vinci Clinic', 'proof_big': '4 clinics', 'proof_small': 'Mid Valley · Bukit Jalil · Cheras · TRX', 'proof_short': 'across Kuala Lumpur',
+        ('hero_home', {'tag': 'LCP-certified doctors since 2006', 'h1': ['Your aesthetic', 'clinic in', 'Kuala Lumpur'], 'proof_big': '4 clinics', 'proof_small': 'Mid Valley · Bukit Jalil · Cheras · TRX', 'proof_short': 'across Kuala Lumpur',
                        'text': 'Doctor-led skin and aesthetic care, trusted by patients across Malaysia since 2006. Every treatment begins with an honest clinical consultation, not a sales pitch.', 'cta': 'Book a consultation'}),
         ('promos', PROMOS),
         ('about_block', {'eyebrow': 'About Da Vinci Clinic', 'title': 'Mastering the art of science and unlocking timeless beauty', 'pills': ['No downtime', 'Patient-centric', 'Result oriented', 'Doctor-led'],

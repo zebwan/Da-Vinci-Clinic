@@ -67,15 +67,19 @@ def footer(d):
             f'<a class="wa" href="{SITE["wa_main"]}" target="_blank" rel="noopener" aria-label="WhatsApp Da Vinci Clinic">{WA_ICON}</a>')
 
 def hero_home(c, d):
+    """Home hero: one generated marble sculpture covers the whole section (16:9 for desktop and landscape, 9:16 for
+    portrait tablets and phones), the copy sits in the navy the image leaves free."""
     r = rel(d)
     avs = ''.join(img(f'{r}assets/img/av-{i}.webp', '', 45, 45, lazy=False) for i in (1, 2, 3))
-    return (f'<section class="hero" id="top"><div class="hero__bg">{img(r + "assets/img/hero-bg-dark.webp", "", 1600, 1000, lazy=False)}</div>'
-            f'<div class="hero__cut">{img(r + "assets/img/hero-cutout.webp", c["cut_alt"], 556, 812, lazy=False).replace("<img ", "<img fetchpriority=high ")}</div>'
-            f'<div class="hero__in"><div class="hero__left"><div class="hero__top">'
+    art = (f'<picture><source media="(max-width: 1199.98px) and (orientation: portrait)" srcset="{r}assets/img/hero-sculpt-tall.webp" width="1080" height="1920">'
+           f'<img src="{r}assets/img/hero-sculpt-wide.webp" alt="" width="2240" height="1260" fetchpriority="high" decoding="async"></picture>')
+    return (f'<section class="hero" id="top"><div class="hero__bg">{art}</div>'
+            f'<div class="hero__in"><div class="hero__top">'
             f'<span class="hero__tag rv d4">{esc(c["tag"])}</span>'
             f'<h1><span class="rv">{esc(c["h1"][0])}</span><span class="line2 rv d1">{MARK.replace("{r}", r)}<span>{esc(c["h1"][1])}</span></span><span class="rv d2">{esc(c["h1"][2])}</span></h1></div>'
-            f'<div class="hero__bottom"><div class="hero__proof rv d4"><div class="avatars">{avs}</div><div><h4>{esc(c["proof_big"])}</h4><p><span class="proof-long">{esc(c["proof_small"])}</span><span class="proof-short">{esc(c.get("proof_short", c["proof_small"]))}</span></p></div></div></div></div>'
-            f'<div class="hero__right"><p class="rv d3">{esc(c["text"])}</p><div class="rv d4">{btn(c["cta"], r + "contact/", "btn--gold")}</div></div></div></section>')
+            f'<div class="hero__lede"><p class="rv d3">{esc(c["text"])}</p><div class="rv d4">{btn(c["cta"], r + "contact/", "btn--gold")}</div></div>'
+            f'<div class="hero__bottom"><div class="hero__proof rv d4"><div class="avatars">{avs}</div><div><h4>{esc(c["proof_big"])}</h4><p><span class="proof-long">{esc(c["proof_small"])}</span><span class="proof-short">{esc(c.get("proof_short", c["proof_small"]))}</span></p></div></div></div>'
+            f'</div></section>')
 
 def ihero(c, d):
     """Inner-page hero: H1 + intro, optional media (image / video / youtube)."""

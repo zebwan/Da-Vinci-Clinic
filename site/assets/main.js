@@ -30,16 +30,14 @@
        push the lower hero items (button, clinic count) below the observer and leave them hidden until a scroll */
     requestAnimationFrame(() => document.querySelectorAll('.hero .rv, .ihero .rv').forEach(e => { e.classList.add('is-in'); io.unobserve(e); }));
   }
-  /* hero: photo zoom-out from 1.1 (2s), cut-out drops in, pill + proof appear at 1.2s (probe hero_appear) */
+  /* hero: the sculpture zooms out from 1.1 over 2s, pill + proof appear at 1.2s (probe hero_appear) */
   const heroBg = document.querySelector('.hero__bg img');
-  const heroCut = document.querySelector('.hero__cut');
   if (heroBg && !reduced) {
     requestAnimationFrame(() => {
       heroBg.style.transition = 'transform 2s cubic-bezier(.16,1,.3,1)';
       heroBg.style.transform = 'scale(1)';
-      if (heroCut) { heroCut.style.transition = 'opacity 1.2s cubic-bezier(.16,1,.3,1), transform 2s cubic-bezier(.16,1,.3,1)'; heroCut.style.opacity = '1'; heroCut.style.transform = window.innerWidth < 1200 ? 'none' : 'translateX(-50%) translateY(0)'; }
     });
-  } else if (heroCut) { heroCut.style.opacity = '1'; heroCut.style.transform = window.innerWidth < 1200 ? 'none' : 'translateX(-50%)'; }
+  }
 
   /* ---- count-up (≈0.6s, ease-out) ---- */
   const counters = document.querySelectorAll('[data-count]');
