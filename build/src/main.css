@@ -554,7 +554,8 @@ p{font-size:16px;line-height:24px}
   /* ---- phone: How it works as a stacking deck, in step order ---- */
   .work__cols{gap:14px;padding-bottom:30px}
   .work__col{display:contents}
-  .wcard{position:sticky;top:calc(80px + var(--i) * 12px);order:var(--i);padding:10px 10px 22px;gap:16px}
+  /* the cards come from two desktop columns (steps 1,3 | 2,4), so paint order must follow the step, not the DOM */
+  .wcard{position:sticky;top:calc(80px + var(--i) * 12px);order:var(--i);z-index:calc(var(--i) + 1);padding:10px 10px 22px;gap:16px}
   .wcard img{aspect-ratio:16/10}
   .wcard__txt{gap:10px}
 
