@@ -91,13 +91,14 @@ def ihero(c, d):
     return f'<section class="sec ihero"><div class="wrap col">{crumb}{head_block(c.get("eyebrow"), esc(c["h1"]), esc(c.get("text","")), tag="h1")}{media}</div></section>'
 
 def about_block(c, d):
-    pills = ''.join(f'<span class="tagpill tagpill--{i+1}">{esc(p)}</span>' for i, p in enumerate(c['pills']))
+    """Home About: one art-directed marble bust (generated in Magnific for this slot) running full width, the heading
+    set in the empty navy beside it (below it on phone), the three stats underneath."""
     stats = ''.join(f'<div class="stat rv d{i}"><p>{esc(s["label"])}</p><h2 data-count="{s["n"]}" data-prefix="{s.get("prefix","")}" data-suffix="{s.get("suffix","")}">{s.get("prefix","")}0{s.get("suffix","")}</h2></div>' for i, s in enumerate(c['stats']))
     r = rel(d)
-    busts = (f'<div class="about__bust about__bust--l" data-par=".14"><img class="rv" src="{r}assets/img/bust-david.webp" alt="" width="735" height="820" loading="lazy" decoding="async"></div>'
-             f'<div class="about__bust about__bust--r" data-par=".2"><img class="rv d2" src="{r}assets/img/bust-venus.webp" alt="" width="651" height="820" loading="lazy" decoding="async"></div>')
-    return (f'<section class="sec sec--lg about-sec" id="about"><div class="wrap col" style="gap:10px"><div class="about__block">{busts}{pills}'
-            f'{head_block(c["eyebrow"], esc(c["title"]))}</div><div class="stats stats--rows">{stats}</div></div></section>')
+    art = (f'<picture class="about__art zoom"><source media="(max-width: 767.98px)" srcset="{r}assets/img/about-bust-tall.webp" width="1080" height="1440">'
+           f'<img src="{r}assets/img/about-bust-wide.webp" alt="Classical marble bust lit in a dark studio" width="2240" height="1260" loading="lazy" decoding="async"></picture>')
+    return (f'<section class="sec sec--lg about-sec" id="about"><div class="wrap col"><div class="about__stage">{art}'
+            f'<div class="about__copy">{head_block(c["eyebrow"], esc(c["title"]), left=True)}</div></div><div class="stats stats--rows">{stats}</div></div></section>')
 
 def services(c, d):
     r = rel(d)
@@ -282,7 +283,7 @@ def render(page):
     head = (f'<!doctype html><html lang="en-MY"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{esc(page["title"])}</title><meta name="description" content="{esc(page["desc"])}"><link rel="canonical" href="{canonical}">'
             f'<meta property="og:title" content="{esc(page["title"])}"><meta property="og:description" content="{esc(page["desc"])}"><meta property="og:image" content="{ogimg}"><meta property="og:type" content="website"><meta property="og:url" content="{canonical}">'
-            f'<link rel="icon" href="{r}assets/img/favicon.png"><link rel="preload" href="{r}assets/fonts/cormorant-garamond-500-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{r}assets/fonts/manrope-var-latin.woff2" as="font" type="font/woff2" crossorigin>'
+            f'<link rel="icon" href="{r}assets/img/favicon.png"><link rel="preload" href="{r}assets/fonts/zodiak-400.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{r}assets/fonts/manrope-var-latin.woff2" as="font" type="font/woff2" crossorigin>'
             f'<link rel="stylesheet" href="{r}assets/fonts.css?v={VER}"><link rel="stylesheet" href="{r}assets/main.css?v={VER}">{jsonld(page, d)}</head>')
     cls = page.get('body_class', '')
     html = head + f'<body class="{cls}">' + header(d, dark=page.get('dark_header', False)) + '<main>' + body + '</main>' + footer(d) + f'<script src="{r}assets/main.js?v={VER}" defer></script></body></html>'
