@@ -94,25 +94,25 @@ p{font-size:16px;line-height:24px}
 .mnav{display:none}
 
 /* ---------- hero (home) ---------- */
-.hero{position:relative;height:100vh;min-height:760px;padding:222px var(--pad-x) 40px;display:flex;justify-content:center;align-items:center;overflow:hidden;background:var(--bg)}
-.hero__bg{position:absolute;inset:0}
-.hero__bg img{width:100%;height:100%;object-fit:cover;transform:scale(1.1);transform-origin:50% 50%}
-.hero__cut{position:absolute;left:calc(50% + 50px);bottom:-40px;width:490px;height:716px;transform:translateX(-50%) translateY(-100px);opacity:.001}
-.hero__cut img{width:100%;height:100%;object-fit:cover;object-position:50% 0}
-.hero__in{position:relative;width:100%;max-width:var(--container);display:flex;justify-content:space-between;align-items:center}
-.hero__left{width:827px;display:flex;flex-direction:column;gap:190px}
-.hero__top{display:flex;flex-direction:column;gap:20px;align-items:flex-start}
+/* the sculpture image covers the hero; on desktop its box starts far enough right that the face (45% into the
+   16:9 frame) always clears the copy column, whatever the viewport height */
+.hero{position:relative;min-height:max(100vh,760px);padding:150px var(--pad-x) 40px;display:flex;justify-content:center;overflow:hidden;background:var(--bg)}
+.hero__bg{position:absolute;top:0;right:0;bottom:0;left:max(0px,calc(max(var(--pad-x),(100% - var(--container)) / 2) + 540px - .8 * max(100vh,760px)));-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 180px);mask-image:linear-gradient(90deg,transparent 0,#000 180px)}
+.hero__bg picture{display:block;width:100%;height:100%}
+.hero__bg img{width:100%;height:100%;object-fit:cover;object-position:0 30%;transform:scale(1.1);transform-origin:62% 40%}
+.hero__in{position:relative;width:100%;max-width:var(--container);display:flex;flex-direction:column;align-items:flex-start}
+.hero__lede{width:420px;margin-top:32px;display:flex;flex-direction:column;gap:32px;align-items:flex-start}
+.hero__lede p{color:var(--on-dark)}
+.hero__top{margin-top:auto;display:flex;flex-direction:column;gap:20px;align-items:flex-start}
 .hero__tag{display:inline-flex;align-items:center;gap:8px;height:40px;padding:8px 16px;border-radius:90px;background:var(--glass);color:var(--ink);backdrop-filter:blur(6px);box-shadow:inset 0 0 0 1px var(--line-soft)}
 .hero__tag::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--gold-2)}
 .hero h1{font-weight:400;font-size:70px;line-height:76px;letter-spacing:-1.2px;color:var(--ink);display:flex;flex-direction:column;gap:10px}
 .hero h1 .line2{display:flex;align-items:center;gap:32px}
 .hero h1 .line2 .mark{width:auto;height:66px;margin-left:46px;display:block}
-.hero__bottom{display:flex;justify-content:space-between;align-items:flex-end}
+.hero__bottom{margin-top:auto;padding-top:56px;display:flex;justify-content:space-between;align-items:flex-end}
 .hero__proof{display:flex;align-items:center;gap:16px}
 .avatars{display:flex;flex:none}.hero__proof>div:last-child{min-width:0}.avatars img{width:45px;height:45px;border-radius:999px;object-fit:cover;border:2px solid var(--bg);margin-left:-14px}.avatars img:first-child{margin-left:0}
 .hero__proof h4{color:var(--ink)}.hero__proof p{color:var(--body)}.proof-short{display:none}
-.hero__right{width:293px;padding-top:160px;display:flex;flex-direction:column;gap:32px;align-items:flex-start}
-.hero__right p{color:var(--on-dark)}
 
 /* inner hero */
 .ihero{padding:162px var(--pad-x) 60px}
@@ -401,7 +401,7 @@ p{font-size:16px;line-height:24px}
 .rv.is-in{opacity:1;transform:none;transition:opacity 2s var(--ease-out),transform 2s var(--ease-out)}
 .rv.d1.is-in{transition-delay:.1s}.rv.d2.is-in{transition-delay:.2s}.rv.d3.is-in{transition-delay:.3s}.rv.d4.is-in{transition-delay:.4s}
 .zoom{overflow:hidden}.zoom img{transform:scale(1.1);transition:transform 2s var(--ease-out)}.zoom.is-in img{transform:scale(1)}
-@media (prefers-reduced-motion:reduce){.rv,.hero__cut,.hero__bg img{opacity:1!important;transform:none!important;transition:none!important}.zoom img{transform:none}}
+@media (prefers-reduced-motion:reduce){.rv,.hero__bg img{opacity:1!important;transform:none!important;transition:none!important}.zoom img{transform:none}}
 
 /* =================== TABLET ≤1199 =================== */
 @media (max-width:1199.98px){
@@ -422,13 +422,6 @@ p{font-size:16px;line-height:24px}
   .mnav{display:flex;flex-direction:column;gap:24px;padding:20px 30px;transform:translateY(66px);transition:transform .6s cubic-bezier(.45,0,.55,1)}
   body.menu-open .mnav{transform:none}
   .mnav a{display:inline-flex;align-items:center;height:40px;padding:8px 20px;border-radius:50px;color:var(--ink);font-size:16px;line-height:24px;align-self:flex-start}
-  .hero{height:100vh;min-height:900px;padding:150px 30px 30px}
-  .hero__in{flex-direction:column;align-items:flex-start;gap:24px}
-  .hero__cut{top:auto;bottom:-40px;left:auto;right:-110px;width:556px;height:812px;transform:none}
-  .hero__right{position:relative;z-index:1;background:rgba(7,17,31,.7);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px var(--line);border-radius:20px;padding:20px}
-  .hero__left{width:457px;gap:60px}
-  .hero__right{width:457px;padding-top:0;gap:24px}
-  .hero__bottom{position:relative;z-index:1}
   .ihero{padding:140px 30px 40px}
   .about__stage{height:clamp(440px,58vw,620px)}.about__copy .head{max-width:400px}.about__copy h2{font-size:44px;line-height:50px}
   .stats{flex-wrap:wrap}.stat{flex:1 1 calc(50% - 8px)}
@@ -455,6 +448,30 @@ p{font-size:16px;line-height:24px}
   .az{grid-template-columns:1fr 1fr}
   .featured{flex-direction:column;align-items:flex-start}.featured__img{width:100%}
 }
+/* portrait tablet + phone hero: the 9:16 sculpture sits behind the headline (its top 40% is empty navy), the face
+   stays clear and the paragraph, button and clinic count sit at the foot over the faded shoulders */
+@media (max-width:1199.98px) and (orientation:portrait){
+  .hero{min-height:100vh;padding:150px 30px 30px}
+  /* 640x1138 image from y30: the chin lands 647px below the copy column's top, so the headline group reserves that */
+  .hero__top{min-height:657px}
+  .hero__bg{left:50%;right:auto;top:30px;bottom:auto;width:min(100%,640px);aspect-ratio:9/16;transform:translateX(-50%);
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(180deg,transparent 0,#000 8%,#000 74%,transparent 100%);-webkit-mask-composite:source-in;
+    mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(180deg,transparent 0,#000 8%,#000 74%,transparent 100%);mask-composite:intersect}
+  .hero__bg img{object-position:50% 0;transform-origin:50% 50%}
+  .hero__lede{width:100%;margin-top:auto;padding:20px;gap:20px;background:rgba(7,17,31,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px var(--line);border-radius:20px}
+  .hero__top{margin-top:0;justify-content:flex-start}
+  .hero__bottom{margin-top:16px;padding-top:0}
+  .hero__proof{background:rgba(7,17,31,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px var(--line);border-radius:60px;padding:8px 20px 8px 8px}
+}
+@media (max-width:767.98px) and (orientation:portrait){
+  .hero{padding:100px 20px 30px}
+  /* full-width 9:16 image from y100 (head starts 40% down, below the headline); the chin sits 67.4% down,
+     i.e. 120vw below the copy column's top, so the paragraph panel starts just under it */
+  .hero__top{min-height:calc(120vw + 12px)}
+  .hero__bg{left:0;top:100px;width:100%;transform:none;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 8%,#000 76%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 8%,#000 76%,transparent 100%)}
+  .hero__bg img{object-position:56% 0}
+}
 /* =================== PHONE ≤767.98 =================== */
 @media (max-width:767.98px){
   :root{--container:350px;--pad-x:20px;--sec:30px;--sec-lg:60px;--gap:40px}
@@ -465,16 +482,10 @@ p{font-size:16px;line-height:24px}
   .stat h2{font-size:56px;line-height:64.4px}
   .header,.header__in{height:64px}.header__in{padding:0 20px}
   .mnav{padding:20px}
-  .hero{min-height:844px;padding:100px 20px 30px;align-items:center}
-  .hero__in{flex-direction:column;align-items:flex-start;gap:24px}
-  .hero__cut{left:auto;right:-125px;top:auto;bottom:-30px;width:340px;height:497px;transform:none}
-  .hero__right{position:relative;z-index:1;background:rgba(7,17,31,.7);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px var(--line);border-radius:20px;padding:20px}
-  .hero__bottom{position:relative;z-index:1}.hero__proof{background:rgba(7,17,31,.7);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px var(--line);border-radius:60px;padding:8px 20px 8px 8px}
+  .hero__proof{background:rgba(7,17,31,.7);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px var(--line);border-radius:60px;padding:8px 20px 8px 8px}
   .avatars img{width:36px;height:36px;margin-left:-12px}.proof-long{display:none}.proof-short{display:inline}.hero__proof p{white-space:nowrap;font-size:14px;line-height:20px}.hero__proof{padding-right:16px}
-  .hero__left{width:100%;gap:80px}
-  .hero h1{font-size:48px;line-height:54px;letter-spacing:-.6px}
+  .hero h1{font-size:min(48px,12.4vw);line-height:1.125;letter-spacing:-.6px}
   .hero h1 .line2 .mark{height:42px;margin-left:30px}.hero h1 .line2{gap:20px}
-  .hero__right{width:100%;padding-top:0;gap:24px}
   .hero__bottom{width:100%}
   .ihero{padding:120px 20px 30px}
   .row{flex-direction:column;align-items:flex-start}
