@@ -26,6 +26,9 @@
       entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } });
     }, { threshold: 0.12, rootMargin: '0px 0px -5% 0px' });
     rvs.forEach(e => io.observe(e));
+    /* hero copy appears on load like the template's appear animation; the 200px start offset would otherwise
+       push the lower hero items (button, clinic count) below the observer and leave them hidden until a scroll */
+    requestAnimationFrame(() => document.querySelectorAll('.hero .rv, .ihero .rv').forEach(e => { e.classList.add('is-in'); io.unobserve(e); }));
   }
   /* hero: photo zoom-out from 1.1 (2s), cut-out drops in, pill + proof appear at 1.2s (probe hero_appear) */
   const heroBg = document.querySelector('.hero__bg img');
@@ -56,43 +59,92 @@
     counters.forEach(c => cio.observe(c));
   }
 
-  /* ---- How it works: sticky heading shrinks 1→.6 and fades over ~1000px (probe work_scroll) ---- */
+  /* ---- How it works: sticky heading shrinks 1→.6 and fades over ~1000px (template), and in its place
+         the marble bust rises in the sticky centre; a gold line draws down the centre and lights each step ---- */
   const work = document.querySelector('.work');
   const workHead = work && work.querySelector('.head');
-  /* ---- Approach: pinned block, track translates X at 0.859 px per px of scroll (probe approach_scroll) ---- */
-  const approach = document.querySelector('.approach');
-  const track = approach && approach.querySelector('.approach__track');
-  let trackDist = 0;
-  const measureTrack = () => {
-    if (!track || isPhone()) return;
-    const wrapW = approach.querySelector('.wrap').getBoundingClientRect().width;
-    trackDist = Math.max(0, track.scrollWidth - wrapW);
-    /* section height = pin height + scroll needed for the full translate (template: 4640px of X over 5400px of Y) */
-    const pin = approach.querySelector('.approach__pin');
-    approach.style.minHeight = (pin.getBoundingClientRect().height + trackDist / 0.859 + 160) + 'px';
+  const bust = work && work.querySelector('.work__bust');
+  const spine = work && work.querySelector('.work__spine');
+  const line = spine && spine.querySelector('.work__line');
+  const nodes = spine ? [...spine.querySelectorAll('.work__node')] : [];
+  const cards = work ? [...work.querySelectorAll('.wcard')] : [];
+  let nodeY = [];
+  const placeNodes = () => {
+    if (!spine) return;
+    /* layout offsets, not getBoundingClientRect: the cards may still carry their reveal transform */
+    nodeY = [];
+    cards.forEach(c => { nodeY[+c.dataset.step] = c.parentElement.offsetTop + c.offsetTop + Math.min(c.offsetHeight * .5, 260) - spine.offsetTop; });
+    nodes.forEach((n, i) => { const k = +n.dataset.node; n.style.top = (nodeY[k] || 0) + 'px'; });
   };
+  /* parallax for decorative sculptures: translate relative to the parent's position in the viewport */
+  const pars = [...document.querySelectorAll('[data-par]')];
   const onScroll = () => {
-    const y = window.scrollY;
-    if (workHead && !reduced) {   /* template keeps the sticky shrink/fade on phone too */
+    const y = window.scrollY, vh = window.innerHeight;
+    if (workHead && !reduced) {
       const top = work.getBoundingClientRect().top + y;         /* section top in page coords */
       const p = Math.min(1, Math.max(0, (y - (top - 232)) / 1000));
       const sc = 1 - 0.4 * p, op = Math.max(0, 1 - Math.pow(p, 0.8) * 1.05);
       workHead.style.transform = 'scale(' + sc.toFixed(4) + ')';
       workHead.style.opacity = op.toFixed(3);
+      if (bust) {
+        const b = Math.min(1, Math.max(0, (p - .25) / .55));
+        bust.style.opacity = b.toFixed(3);
+        bust.style.transform = 'translateY(' + ((1 - b) * 70).toFixed(1) + 'px) scale(' + (.9 + .1 * b).toFixed(4) + ')';
+      }
+    } else if (bust) { bust.style.opacity = 1; }
+    if (line) {
+      const r = spine.getBoundingClientRect();
+      const pen = Math.min(r.height, Math.max(0, vh * .5 - r.top));      /* the line is drawn to the middle of the screen */
+      line.style.transform = 'scaleY(' + (pen / r.height).toFixed(4) + ')';
+      nodes.forEach(n => n.classList.toggle('is-on', pen >= (nodeY[+n.dataset.node] || 1e9) - 2));
     }
-    if (track && !isPhone()) {
-      const top = approach.getBoundingClientRect().top + y;
-      const x = Math.min(trackDist, Math.max(0, (y - (top - 3)) * 0.859));
-      track.style.transform = 'translate3d(' + (-x).toFixed(1) + 'px,0,0)';
-    }
+    if (!reduced) pars.forEach(el => {
+      const pr = el.parentElement.getBoundingClientRect();
+      const d = (pr.top + pr.height / 2) - vh / 2, lim = window.innerWidth < 768 ? 22 : 60;
+      el.style.translate = '0 ' + Math.max(-lim, Math.min(lim, -d * parseFloat(el.dataset.par))).toFixed(1) + 'px';
+    });
   };
-  if (workHead || track) {
-    measureTrack();
-    window.addEventListener('resize', () => { measureTrack(); onScroll(); });
+  if (workHead || pars.length) {
+    placeNodes();
+    window.addEventListener('resize', () => { placeNodes(); onScroll(); });
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('load', () => { measureTrack(); onScroll(); });
+    window.addEventListener('load', () => { placeNodes(); onScroll(); });
     onScroll();
   }
+
+  /* ---- Signature treatments: auto-playing slider (6 s), pauses on hover / focus / off-screen / hidden tab, swipe on touch ---- */
+  document.querySelectorAll('.sig__slider').forEach(sl => {
+    const track = sl.querySelector('.sig__track'), slides = [...track.children], tabs = [...sl.querySelectorAll('.sig__tab')];
+    const dur = +sl.dataset.interval || 6000;
+    let i = 0, t0 = performance.now(), elapsed = 0, paused = false, inView = false, raf = 0;
+    const go = (n, user) => {
+      i = (n + slides.length) % slides.length;
+      const step = slides[0].getBoundingClientRect().width + parseFloat(getComputedStyle(track).columnGap || 40);
+      track.style.transform = 'translate3d(' + (-i * step).toFixed(1) + 'px,0,0)';
+      slides.forEach((s, k) => { s.classList.toggle('is-active', k === i); s.setAttribute('aria-hidden', k === i ? 'false' : 'true'); });
+      tabs.forEach((tb, k) => { tb.classList.toggle('is-active', k === i); tb.classList.toggle('is-done', k < i); tb.querySelector('i').style.transform = k < i ? '' : 'scaleX(0)'; });
+      elapsed = 0; t0 = performance.now();
+    };
+    const tick = (now) => {
+      if (!paused && inView && !document.hidden) {
+        elapsed += now - t0;
+        if (elapsed >= dur) go(i + 1); else tabs[i].querySelector('i').style.transform = 'scaleX(' + (elapsed / dur).toFixed(4) + ')';
+      }
+      t0 = now; raf = requestAnimationFrame(tick);
+    };
+    tabs.forEach((tb, k) => tb.addEventListener('click', () => go(k, true)));
+    sl.querySelector('.sig__prev').addEventListener('click', () => go(i - 1, true));
+    sl.querySelector('.sig__next').addEventListener('click', () => go(i + 1, true));
+    sl.addEventListener('mouseenter', () => { paused = true; }); sl.addEventListener('mouseleave', () => { paused = false; });
+    sl.addEventListener('focusin', () => { paused = true; }); sl.addEventListener('focusout', () => { paused = false; });
+    let x0 = null;
+    track.addEventListener('pointerdown', e => { x0 = e.clientX; });
+    track.addEventListener('pointerup', e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1), true); });
+    new IntersectionObserver(es => es.forEach(en => { inView = en.isIntersecting; }), { threshold: .35 }).observe(sl);
+    window.addEventListener('resize', () => go(i));
+    go(0);
+    if (!reduced) raf = requestAnimationFrame(tick);
+  });
 
   /* ---- Team accordion: hovered card expands (desktop only) ---- */
   document.querySelectorAll('.team').forEach(team => {
