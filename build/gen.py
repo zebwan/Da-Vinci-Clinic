@@ -123,9 +123,11 @@ def work(c, d):
     def card(s, i): return f'<div class="wcard rv" data-step="{i}"><div class="zoom">{img(r + s["img"], s["alt"], 844, 870)}</div><div class="wcard__txt"><h3>{esc(s["title"])}</h3><span class="wcard__rule" aria-hidden="true"></span><p>{esc(s["text"])}</p></div></div>'
     st = c['steps']
     nodes = ''.join(f'<i class="work__node work__node--{"l" if i % 2 == 0 else "r"}" data-node="{i}"></i>' for i in range(len(st)))
-    stage = (f'<div class="work__stage" aria-hidden="true"><div class="work__bust"><img src="{r}assets/img/bust-venus-2.webp" alt="" width="551" height="720" loading="lazy" decoding="async"></div></div>'
-             f'<div class="work__spine" aria-hidden="true"><span class="work__track"></span><span class="work__line"></span>{nodes}</div>')
-    return (f'<section class="sec work"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]), rv=False)}'
+    stage = f'<div class="work__spine" aria-hidden="true"><span class="work__track"></span><span class="work__line"></span>{nodes}</div>'
+    # Da Vinci's sculpture film (their homepage hero) pinned behind the steps while the cards scroll over it
+    bg = (f'<div class="work__bg" aria-hidden="true"><div class="work__bgv"><video muted loop playsinline preload="none" poster="{r}assets/img/hero-video-poster.jpg">'
+          f'<source src="{r}assets/video/dv-hero-1920.webm" type="video/webm"><source src="{r}assets/video/dv-hero-1920.mp4" type="video/mp4"></video></div></div>')
+    return (f'<section class="sec work">{bg}<div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]), rv=False)}'
             f'<div class="work__cols">{stage}<div class="work__col work__col--a">{card(st[0],0)}{card(st[2],2)}</div><div class="work__col work__col--b">{card(st[1],1)}{card(st[3],3)}</div></div></div></section>')
 
 def approach(c, d):
@@ -297,7 +299,7 @@ def main():
     shutil.copytree(os.path.join(ROOT, 'assets/img'), os.path.join(OUT, 'assets/img'))
     shutil.copytree(os.path.join(ROOT, 'assets/fonts'), os.path.join(OUT, 'assets/fonts'))
     os.makedirs(os.path.join(OUT, 'assets/video'), exist_ok=True)
-    for v in ('dv-hero-1280.mp4', 'dv-hero-1280.webm'): shutil.copy(os.path.join(ROOT, 'assets/video', v), os.path.join(OUT, 'assets/video', v))
+    for v in ('dv-hero-1280.mp4', 'dv-hero-1280.webm', 'dv-hero-1920.mp4', 'dv-hero-1920.webm'): shutil.copy(os.path.join(ROOT, 'assets/video', v), os.path.join(OUT, 'assets/video', v))
     shutil.copy(os.path.join(ROOT, 'build/src/main.css'), os.path.join(OUT, 'assets/main.css'))
     shutil.copy(os.path.join(ROOT, 'build/src/main.js'), os.path.join(OUT, 'assets/main.js'))
     shutil.copy(os.path.join(ROOT, 'build/src/fonts.css'), os.path.join(OUT, 'assets/fonts.css'))

@@ -169,13 +169,15 @@ p{font-size:16px;line-height:24px}
 
 /* ---------- How it works (zig-zag + shrinking sticky heading) ---------- */
 .work{position:relative}
+.work > .wrap{position:relative;z-index:1}
+.work .head h2,.work .head p,.work .head .eyebrow{text-shadow:0 1px 14px rgba(7,17,31,.95),0 0 3px rgba(7,17,31,.6)}
+.work__bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.work__bgv{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--bg)}
+/* the film's black backdrop takes on the page navy (lighten keeps every lit surface of the marble as filmed); top and bottom feather into the page */
+.work__bgv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:lighten;-webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 20%,#000 80%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0%,#000 20%,#000 80%,transparent 100%)}
 .work .head{position:sticky;top:120px;transform-origin:50% 50%;will-change:transform,opacity}
 .work__cols{position:relative;display:flex;gap:228px;width:100%;justify-content:center}
 .work__col{position:relative;z-index:2}
-.work__stage{position:absolute;top:-140px;bottom:0;left:50%;width:360px;margin-left:-180px;z-index:1;pointer-events:none}
-.work__bust{position:sticky;top:calc(50vh - 190px);height:420px;opacity:0;will-change:opacity,transform}
-.work__bust img{height:100%;width:auto;max-width:none;margin:0 auto}
-.work__bust::before{content:"";position:absolute;left:50%;top:46%;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:radial-gradient(closest-side,rgba(201,169,97,.16),rgba(201,169,97,.05) 55%,rgba(201,169,97,0));z-index:-1}
 .work__spine{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;z-index:0;pointer-events:none}
 .work__track{position:absolute;inset:0;background:linear-gradient(180deg,rgba(201,169,97,0),rgba(201,169,97,.16) 120px,rgba(201,169,97,.16) calc(100% - 120px),rgba(201,169,97,0))}
 .work__line{position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(201,169,97,0),#C9A961 140px);transform-origin:50% 0;transform:scaleY(0)}
@@ -426,7 +428,7 @@ p{font-size:16px;line-height:24px}
   .why{flex-direction:column}.why__photo{width:100%;height:589px}
   .benefit{flex-direction:column}.benefit__photo{width:100%;aspect-ratio:750/421}
   .work__cols{gap:28px}.work__col{width:361px;gap:200px}.work__col--a{padding-bottom:182px}.work__col--b{padding-top:182px}
-  .work__stage{display:none}.work__node::before{display:none}
+  .work__node::before{display:none}
   .slide{gap:40px}.slide__txt{width:300px;min-height:auto}.slide__img{width:410px;height:300px}.slide__txt h3{font-size:34px;line-height:38px}
   .sig__tab{font-size:16px;line-height:19px}.sig__tab span{white-space:normal}.sig__tabs{gap:12px}
   .plans{grid-template-columns:1fr 1fr}
