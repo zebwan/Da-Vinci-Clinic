@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Static generator: Helora template components (measured in 01-template-helora/TEARDOWN.md) filled with Da Vinci content.
 Run: python3 build/gen.py  → writes site/ and mirrors it to the scratchpad serve folder."""
-import os, re, shutil, json, html as H
+import os, re, shutil, json, zlib, html as H
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
 import sys; sys.path.insert(0, os.path.join(ROOT, 'build'))
@@ -11,9 +11,10 @@ OUT = os.path.join(ROOT, 'site')
 MIRROR = '/private/tmp/claude-501/-Users-mysense-Desktop/3b37e4cc-34f8-4a39-86ae-3c0a3d0bc6b8/scratchpad/dv-serve'
 
 ARROW = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-ARROW_L = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-ARROW_R = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-MARK = '<img class="mark" src="{r}assets/img/mark-navy.png" alt="" width="82" height="246">'
+ARROW_L = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+ARROW_R = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+LAUREL = '<svg class="icard__leaf" viewBox="0 0 220 200" aria-hidden="true"><g fill="none" stroke="#C9A961" stroke-width="1.2" stroke-linecap="round"><path d="M34 178Q70 70 182 22"/></g><g fill="#C9A961" fill-opacity=".55"><path transform="translate(43.7 152.9) rotate(-113.9) scale(1.00)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(43.7 152.9) rotate(-17.9) scale(1.00)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(54.6 131.5) rotate(-108.4) scale(0.94)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(54.6 131.5) rotate(-12.4) scale(0.94)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(67.3 111.5) rotate(-102.8) scale(0.89)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(67.3 111.5) rotate(-6.8) scale(0.89)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(81.8 93.0) rotate(-97.1) scale(0.83)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(81.8 93.0) rotate(-1.1) scale(0.83)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(98.2 75.9) rotate(-91.4) scale(0.78)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(98.2 75.9) rotate(4.6) scale(0.78)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(116.4 60.2) rotate(-86.0) scale(0.72)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(116.4 60.2) rotate(10.0) scale(0.72)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(136.4 46.0) rotate(-80.7) scale(0.67)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(136.4 46.0) rotate(15.3) scale(0.67)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(158.3 33.3) rotate(-75.8) scale(0.61)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(158.3 33.3) rotate(20.2) scale(0.61)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/><path transform="translate(182.0 22.0) rotate(-24)" d="M0 0C8-6 22-7 34 0C22 7 8 6 0 0Z"/></g></svg>'
+MARK = '<img class="mark" src="{r}assets/img/mark-gold.png" alt="" width="82" height="246">'
 SOCIAL = {
     'facebook': '<svg viewBox="0 0 24 24"><path d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.6 1.6-1.6h1.7V4.4c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.2H7.4V14h2.7v8h3.4Z"/></svg>',
     'instagram': '<svg viewBox="0 0 24 24"><path d="M12 7.3a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm5.9-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0ZM21 8.2c-.1-1.5-.4-2.8-1.5-3.9S17.3 2.9 15.8 2.8c-1.5-.1-6.1-.1-7.6 0-1.5.1-2.8.4-3.9 1.5S2.9 6.7 2.8 8.2c-.1 1.5-.1 6.1 0 7.6.1 1.5.4 2.8 1.5 3.9s2.4 1.4 3.9 1.5c1.5.1 6.1.1 7.6 0 1.5-.1 2.8-.4 3.9-1.5s1.4-2.4 1.5-3.9c.1-1.5.1-6.1 0-7.6Zm-2 9.2a3 3 0 0 1-1.7 1.7c-1.2.5-4 .4-5.3.4s-4.1.1-5.3-.4a3 3 0 0 1-1.7-1.7c-.5-1.2-.4-4-.4-5.3s-.1-4.1.4-5.3A3 3 0 0 1 6.7 5c1.2-.5 4-.4 5.3-.4s4.1-.1 5.3.4a3 3 0 0 1 1.7 1.7c.5 1.2.4 4 .4 5.3s.1 4.1-.4 5.3Z"/></svg>',
@@ -40,16 +41,40 @@ def img(src, alt, w=None, h=None, cls='', lazy=True):
     a = f' width="{w}" height="{h}"' if w and h else ''
     return f'<img src="{src}" alt="{esc(alt)}"{a}{" class=" + chr(34) + cls + chr(34) if cls else ""}{" loading=lazy" if lazy else ""} decoding="async">'
 
+# decorative marble sculptures ("stickers") placed at the page edges; see CREDITS.md for sources
+DECO_FILES = {'vestal': ('sc-vestal.webp', 435, 720), 'paris': ('sc-paris.webp', 306, 720), 'maiden': ('sc-maiden.webp', 331, 720),
+              'venezia': ('sc-venezia.webp', 499, 720), 'herm': ('sc-herm.webp', 532, 720), 'faith': ('sc-faith.webp', 753, 720),
+              'venus': ('bust-venus.webp', 651, 820), 'david': ('bust-david.webp', 735, 820), 'venus2': ('bust-venus-2.webp', 551, 720)}
+DECO_POOL = ['vestal', 'paris', 'venezia', 'faith', 'maiden', 'david', 'venus', 'herm', 'venus2']
+DECO = {'i': 0, 'side': 0, 'used': set()}
+
+def deco(d, side=None, name=None, cls=''):
+    if name is not None and name in DECO['used'] and cls == 'deco--panel':
+        name = None    # the panel takes whichever sculpture the page has not used yet
+    if name is None:   # next sculpture in the rotation that this page has not shown yet
+        for _ in range(len(DECO_POOL)):
+            name = DECO_POOL[DECO['i'] % len(DECO_POOL)]; DECO['i'] += 1
+            if name not in DECO['used']: break
+        else:
+            return ''   # every sculpture is already on this page: leave the section plain rather than repeat one
+    DECO['used'].add(name)
+    if side is None:
+        side = 'l' if DECO['side'] % 2 == 0 else 'r'; DECO['side'] += 1
+    f, w, h = DECO_FILES[name]
+    # turn every sculpture to face the content: flip the ones that would otherwise look off the page
+    flip = ' deco--flip' if (side == 'l' and name in ('paris', 'venus')) or (side == 'r' and name in ('faith', 'david', 'herm')) else ''
+    return (f'<div class="deco deco--{side}{flip} {cls}" data-par=".1" aria-hidden="true">'
+            f'<img class="rv" src="{rel(d)}assets/img/{f}" alt="" width="{w}" height="{h}" loading="lazy" decoding="async"></div>')
+
 # ---------------------------------------------------------------- components
 def header(d, dark=False):
     r = rel(d)
     links = ''.join(f'<a href="{r}{h}">{esc(l)}</a>' for l, h in NAV)
     mlinks = ''.join(f'<a href="{r}{h}">{esc(l)}</a>' for l, h in NAV)
-    logo = 'logo-white.png' if dark else 'logo-navy.png'
     return (f'<header class="header{" header--dark" if dark else ""}"><div class="header__in">'
-            f'<a class="header__logo" href="{r}" aria-label="Da Vinci Clinic home"><img src="{r}assets/img/logo-white.png" alt="Da Vinci Clinic" class="logo-mobile"><img src="{r}assets/img/{logo}" alt="Da Vinci Clinic" class="logo-desktop"></a>'
+            f'<a class="header__logo" href="{r}" aria-label="Da Vinci Clinic home"><img src="{r}assets/img/logo-white-sm.png" alt="Da Vinci Clinic" width="53" height="28"></a>'
             f'<nav class="nav" aria-label="Main">{links}</nav>'
-            f'<div class="header__cta">{btn("Book a Consultation", r + "contact/", "btn--glass" if not dark else "btn--white")}'
+            f'<div class="header__cta">{btn("Book a Consultation", r + "contact/", "btn--glass")}'
             f'<button class="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button></div>'
             f'</div><nav class="mnav" aria-label="Mobile">{mlinks}</nav></header>')
 
@@ -69,8 +94,8 @@ def footer(d):
 def hero_home(c, d):
     r = rel(d)
     avs = ''.join(img(f'{r}assets/img/av-{i}.webp', '', 45, 45, lazy=False) for i in (1, 2, 3))
-    return (f'<section class="hero" id="top"><div class="hero__bg">{img(r + "assets/img/hero-bg.webp", "", 1440, 1089, lazy=False)}</div>'
-            f'<div class="hero__cut">{img(r + "assets/img/hero-cutout.webp", c["cut_alt"], 556, 812, lazy=False)}</div>'
+    return (f'<section class="hero" id="top"><div class="hero__bg">{img(r + "assets/img/hero-bg-dark.webp", "", 1600, 1000, lazy=False)}</div>'
+            f'{deco(d, "r", "vestal", "deco--hero")}<div class="hero__cut">{img(r + "assets/img/hero-cutout.webp", c["cut_alt"], 556, 812, lazy=False).replace("<img ", "<img fetchpriority=high ")}</div>'
             f'<div class="hero__in"><div class="hero__left"><div class="hero__top">'
             f'<span class="hero__tag rv d4">{esc(c["tag"])}</span>'
             f'<h1><span class="rv">{esc(c["h1"][0])}</span><span class="line2 rv d1">{MARK.replace("{r}", r)}<span>{esc(c["h1"][1])}</span></span><span class="rv d2">{esc(c["h1"][2])}</span></h1></div>'
@@ -88,12 +113,15 @@ def ihero(c, d):
     elif c.get('image'):
         media = f'<div class="ihero__media rv d2" style="aspect-ratio:{c.get("ratio","1120/600")}">{img(r + c["image"], c.get("image_alt", ""), lazy=False)}</div>'
     crumb = f'<p class="breadcrumb"><a href="{r}">Home</a> › {esc(c["crumb"])}</p>' if c.get('crumb') else ''
-    return f'<section class="sec ihero"><div class="wrap col">{crumb}{head_block(c.get("eyebrow"), esc(c["h1"]), esc(c.get("text","")), tag="h1")}{media}</div></section>'
+    return f'<section class="sec ihero"><div class="wrap col">{deco(d, "l", cls="deco--pair")}{deco(d, "r", cls="deco--pair")}{crumb}{head_block(c.get("eyebrow"), esc(c["h1"]), esc(c.get("text","")), tag="h1")}{media}</div></section>'
 
 def about_block(c, d):
     pills = ''.join(f'<span class="tagpill tagpill--{i+1}">{esc(p)}</span>' for i, p in enumerate(c['pills']))
     stats = ''.join(f'<div class="stat rv d{i}"><p>{esc(s["label"])}</p><h2 data-count="{s["n"]}" data-prefix="{s.get("prefix","")}" data-suffix="{s.get("suffix","")}">{s.get("prefix","")}0{s.get("suffix","")}</h2></div>' for i, s in enumerate(c['stats']))
-    return (f'<section class="sec sec--lg" id="about"><div class="wrap col" style="gap:10px"><div class="about__block">{pills}'
+    r = rel(d); DECO['used'].update({'david', 'venus'})
+    busts = (f'<div class="about__bust about__bust--l" data-par=".14"><img class="rv" src="{r}assets/img/bust-david.webp" alt="" width="735" height="820" loading="lazy" decoding="async"></div>'
+             f'<div class="about__bust about__bust--r" data-par=".2"><img class="rv d2" src="{r}assets/img/bust-venus.webp" alt="" width="651" height="820" loading="lazy" decoding="async"></div>')
+    return (f'<section class="sec sec--lg about-sec" id="about"><div class="wrap col" style="gap:10px"><div class="about__block">{busts}{pills}'
             f'{head_block(c["eyebrow"], esc(c["title"]))}</div><div class="stats">{stats}</div></div></section>')
 
 def services(c, d):
@@ -105,28 +133,34 @@ def services(c, d):
 
 def why(c, d):
     r = rel(d)
-    cards = ''.join(f'<div class="icard rv d{i}"><div class="icard__icon">{img(r + "assets/img/" + it["icon"], "")}</div><div class="icard__txt"><h4>{esc(it["title"])}</h4><p>{esc(it["text"])}</p></div><svg class="icard__leaf" viewBox="0 0 209 191" aria-hidden="true"><path d="M20 170C40 90 90 40 190 20c-10 60-50 120-120 150-20 8-40 8-50 0Z" fill="#E8DBB5"/><path d="M30 165c40-50 80-90 150-135" stroke="#fff" stroke-width="4" fill="none"/></svg></div>' for i, it in enumerate(c['cards']))
-    return (f'<section class="sec"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c.get("text","")))}'
+    cards = ''.join(f'<div class="icard rv d{i}"><div class="icard__icon">{img(r + "assets/img/" + it["icon"].replace(".png", "-gold.png"), "", 32, 32)}</div><div class="icard__txt"><h4>{esc(it["title"])}</h4><p>{esc(it["text"])}</p></div>' + LAUREL + f'</div>' for i, it in enumerate(c['cards']))
+    return (f'<section class="sec"><div class="wrap col">{deco(d)}{head_block(c["eyebrow"], esc(c["title"]), esc(c.get("text","")))}'
             f'<div class="why"><div class="why__photo zoom rv">{img(r + c["img"], c["img_alt"], 724, 1180)}</div><div class="why__grid">{cards}</div></div></div></section>')
 
 def benefit(c, d):
     r = rel(d)
     items = ''.join(f'<p class="lead">• {esc(t)}</p>' for t in c['points'])
-    return (f'<section class="sec"><div class="wrap"><div class="benefit"><div class="benefit__panel rv">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]), left=True, rv=False)}<div class="benefit__list">{items}</div></div>'
+    return (f'<section class="sec"><div class="wrap"><div class="benefit"><div class="benefit__panel rv">{deco(d, "r", "venezia", "deco--panel")}{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]), left=True, rv=False)}<div class="benefit__list">{items}</div></div>'
             f'<div class="benefit__photo zoom rv d1">{img(r + c["img"], c["img_alt"], 828, 1034)}</div></div></div></section>')
 
 def work(c, d):
     r = rel(d)
-    def card(s, i): return f'<div class="wcard rv"><div class="zoom">{img(r + s["img"], s["alt"], 844, 870)}</div><div class="wcard__txt"><h3>{esc(s["title"])}</h3><p>{esc(s["text"])}</p></div></div>'
-    st = c['steps']
+    def card(s, i): return f'<div class="wcard rv" data-step="{i}"><div class="zoom">{img(r + s["img"], s["alt"], 844, 870)}</div><div class="wcard__txt"><h3>{esc(s["title"])}</h3><span class="wcard__rule" aria-hidden="true"></span><p>{esc(s["text"])}</p></div></div>'
+    st = c['steps']; DECO['used'].add('venus2')
+    nodes = ''.join(f'<i class="work__node work__node--{"l" if i % 2 == 0 else "r"}" data-node="{i}"></i>' for i in range(len(st)))
+    stage = (f'<div class="work__stage" aria-hidden="true"><div class="work__bust"><img src="{r}assets/img/bust-venus-2.webp" alt="" width="551" height="720" loading="lazy" decoding="async"></div></div>'
+             f'<div class="work__spine" aria-hidden="true"><span class="work__track"></span><span class="work__line"></span>{nodes}</div>')
     return (f'<section class="sec work"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]), rv=False)}'
-            f'<div class="work__cols"><div class="work__col work__col--a">{card(st[0],0)}{card(st[2],2)}</div><div class="work__col work__col--b">{card(st[1],1)}{card(st[3],3)}</div></div></div></section>')
+            f'<div class="work__cols">{stage}<div class="work__col work__col--a">{card(st[0],0)}{card(st[2],2)}</div><div class="work__col work__col--b">{card(st[1],1)}{card(st[3],3)}</div></div></div></section>')
 
 def approach(c, d):
+    """Signature treatments / protocol steps: auto-playing slider (6 s per slide, pauses on hover, swipe on touch)."""
     r = rel(d)
-    slides = ''.join(f'<div class="slide"><div class="slide__txt"><div class="t"><h3>{esc(s["title"])}</h3><p>{esc(s["text"])}</p></div><div class="slide__pills">{"".join(f"<span class=pill>{esc(p)}</span>" for p in s["pills"])}</div></div><div class="slide__img">{img(r + s["img"], s["alt"], 1200, 866)}</div></div>' for s in c['slides'])
-    return (f'<section class="sec approach" id="{c.get("id","approach")}"><div class="wrap"><div class="approach__pin">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}'
-            f'<div class="approach__track">{slides}</div></div></div></section>')
+    slides = ''.join(f'<div class="slide{" is-active" if i == 0 else ""}" aria-roledescription="slide" aria-label="{i+1} of {len(c["slides"])}"><div class="slide__txt"><div class="t"><h3>{esc(s["title"])}</h3><p>{esc(s["text"])}</p></div><div class="slide__pills">{"".join(f"<span class=pill>{esc(p)}</span>" for p in s["pills"])}</div></div><div class="slide__img">{img(r + s["img"], s["alt"], 1200, 866)}</div></div>' for i, s in enumerate(c['slides']))
+    tabs = ''.join(f'<button class="sig__tab{" is-active" if i == 0 else ""}" data-go="{i}"><span>{esc(s.get("tab", s["title"]))}</span><b class="sig__bar"><i></i></b></button>' for i, s in enumerate(c['slides']))
+    nav = f'<div class="sig__nav"><button class="slider__btn sig__prev" aria-label="Previous">{ARROW_L}</button><button class="slider__btn sig__next" aria-label="Next">{ARROW_R}</button></div>'
+    return (f'<section class="sec sig" id="{c.get("id","approach")}"><div class="wrap col">{deco(d)}{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}'
+            f'<div class="sig__slider rv" data-interval="6000" aria-roledescription="carousel"><div class="sig__track">{slides}</div><div class="sig__ctrl"><div class="sig__tabs">{tabs}</div>{nav}</div></div></div></section>')
 
 def plans(c, d):
     r = rel(d)
@@ -150,7 +184,7 @@ def testimonials(c, d):
     r = rel(d)
     slides = ''.join(f'<div class="tslide"><div class="tslide__img">{img(r + t["img"], t["alt"], 1056, 916)}</div><div class="tslide__card"><h3>“{esc(t["quote"])}”</h3><div class="tslide__who"><p>{esc(t["name"])}</p><p class="small">{esc(t["role"])}</p></div></div></div>' for t in c['items'])
     nav = f'<div class="slider__nav"><button class="slider__btn slider__btn--prev" aria-label="Previous">{ARROW_L}</button><button class="slider__btn slider__btn--next" aria-label="Next">{ARROW_R}</button></div>'
-    return (f'<section class="sec" id="reviews"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}'
+    return (f'<section class="sec" id="reviews"><div class="wrap col">{deco(d)}{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}'
             f'<div class="slider rv"><div class="slider__track">{slides}</div>{nav}</div></div></section>')
 
 def journey(c, d):
@@ -161,7 +195,7 @@ def journey(c, d):
 
 def faq(c, d):
     items = ''.join(f'<div class="faq__item rv d{i%2}"><button class="faq__q" aria-expanded="false"><p>{esc(q)}</p><span class="faq__icon" aria-hidden="true"></span></button><div class="faq__a"><div><p>{esc(a)}</p></div></div></div>' for i, (q, a) in enumerate(c['items']))
-    return f'<section class="sec" id="faq"><div class="wrap col">{head_block(c.get("eyebrow","FAQ"), esc(c["title"]), esc(c.get("text","")))}<div class="faq">{items}</div></div></section>'
+    return f'<section class="sec" id="faq"><div class="wrap col">{deco(d)}{head_block(c.get("eyebrow","FAQ"), esc(c["title"]), esc(c.get("text","")))}<div class="faq">{items}</div></div></section>'
 
 def post_card(p, d, i=0):
     r = rel(d)
@@ -171,7 +205,7 @@ def post_card(p, d, i=0):
 
 def posts(c, d):
     cards = ''.join(post_card(p, d, i) for i, p in enumerate(c['posts'][:3]))
-    return f'<section class="sec" id="blog"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}<div class="posts">{cards}</div></div></section>'
+    return f'<section class="sec" id="blog"><div class="wrap col">{deco(d)}{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}<div class="posts">{cards}</div></div></section>'
 
 def cta(c, d):
     r = rel(d)
@@ -187,7 +221,7 @@ def split(c, d):
 def sticky_rows(c, d):
     r = rel(d)
     rows = ''.join(f'<div class="srow"><div class="srow__img">{img(r + s["img"], s["alt"], 1076, 800)}</div><div class="srow__txt"><h2>{esc(s["title"])}</h2><p>{esc(s["text"])}</p></div></div>' for s in c['rows'])
-    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="stack">{rows}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{deco(d)}{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="stack">{rows}</div></div></section>'
 
 def stats_row(c, d):
     stats = ''.join(f'<div class="stat rv d{i}"><p>{esc(s["label"])}</p><h2 data-count="{s["n"]}" data-prefix="{s.get("prefix","")}" data-suffix="{s.get("suffix","")}">{s.get("prefix","")}0{s.get("suffix","")}</h2></div>' for i, s in enumerate(c['stats']))
@@ -197,7 +231,7 @@ def stats_row(c, d):
 def detail_cards(c, d):
     """Treatment details (procedure time / downtime / anaesthesia / results) as the stat-card row, text only."""
     cards = ''.join(f'<div class="stat rv d{i}" style="gap:16px"><p>{esc(k)}</p><h3>{esc(v)}</h3></div>' for i, (k, v) in enumerate(c['items']))
-    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow","Treatment details"), esc(c["title"]), esc(c.get("text","")))}<div class="stats">{cards}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{deco(d)}{head_block(c.get("eyebrow","Treatment details"), esc(c["title"]), esc(c.get("text","")))}<div class="stats">{cards}</div></div></section>'
 
 def contact_block(c, d):
     r = rel(d)
@@ -214,7 +248,7 @@ def contact_block(c, d):
 
 def info_grid(c, d):
     cards = ''.join(f'<div class="info rv d{i%2}"><h4>{esc(it["title"])}</h4>{it["html"]}</div>' for i, it in enumerate(c['items']))
-    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="info-grid">{cards}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{deco(d)}{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="info-grid">{cards}</div></div></section>'
 
 def map_block(c, d):
     return f'<section class="sec"><div class="wrap col"><div class="map rv"><iframe src="{c["src"]}" title="{esc(c["title"])}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div></div></section>'
@@ -222,12 +256,12 @@ def map_block(c, d):
 def gallery(c, d):
     r = rel(d)
     figs = ''.join(f'<figure class="rv d{i%4}">{img(r + g["img"], g["alt"], 1000, 750)}<figcaption>{esc(g["cap"])}</figcaption></figure>' for i, g in enumerate(c['items']))
-    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="gallery">{figs}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{deco(d)}{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="gallery">{figs}</div></div></section>'
 
 def az(c, d):
     r = rel(d)
     groups = ''.join(f'<div class="az__group rv d{i%3}"><h4>{esc(g["title"])}</h4>{"".join(f"<a href={chr(34)}{r}{h}{chr(34)}>{esc(t)}</a>" for t, h in g["items"])}</div>' for i, g in enumerate(c['groups']))
-    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="az">{groups}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{deco(d)}{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="az">{groups}</div></div></section>'
 
 def article(c, d):
     return f'<section class="sec" style="padding-top:0"><div class="wrap col"><div class="article rv">{c["html"]}</div></div></section>'
@@ -239,7 +273,7 @@ def featured(c, d):
 
 def posts_grid(c, d):
     cards = ''.join(post_card(p, d, i % 3) for i, p in enumerate(c['posts']))
-    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="posts posts--grid">{cards}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{deco(d)}{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="posts posts--grid">{cards}</div></div></section>'
 
 def notice(c, d):
     return f'<section class="sec" style="padding-top:0"><div class="wrap"><div class="notice rv">{c["html"]}</div></div></section>'
@@ -265,13 +299,16 @@ def render(page):
     d = page['slug'].count('/') + (0 if page['slug'] == '' else 1)
     d = 0 if page['slug'] == '' else page['slug'].strip('/').count('/') + 1
     r = rel(d)
+    seed = zlib.crc32(page['slug'].encode()); DECO['i'] = seed % len(DECO_POOL); DECO['side'] = (seed >> 3) % 2
+    names = [n for n, _ in page['sections']]   # reserve the sculptures that fixed sections show anywhere on the page
+    DECO['used'] = ({'venus2'} if 'work' in names else set()) | ({'david', 'venus'} if 'about_block' in names else set())
     body = ''.join(COMPONENTS[name](cfg, d) for name, cfg in page['sections'])
     canonical = SITE['url'] + ('/' if page['slug'] == '' else '/' + page['slug'].strip('/') + '/')
     ogimg = SITE['url'] + '/' + page.get('og', 'assets/img/team-wide.webp')
     head = (f'<!doctype html><html lang="en-MY"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{esc(page["title"])}</title><meta name="description" content="{esc(page["desc"])}"><link rel="canonical" href="{canonical}">'
             f'<meta property="og:title" content="{esc(page["title"])}"><meta property="og:description" content="{esc(page["desc"])}"><meta property="og:image" content="{ogimg}"><meta property="og:type" content="website"><meta property="og:url" content="{canonical}">'
-            f'<link rel="icon" href="{r}assets/img/favicon.png"><link rel="preload" href="{r}assets/fonts/DJS4RYGIUYUXJQOHY5VCZPKSTXUSHTSP.woff2" as="font" type="font/woff2" crossorigin>'
+            f'<link rel="icon" href="{r}assets/img/favicon.png"><link rel="preload" href="{r}assets/fonts/cormorant-garamond-500-latin.woff2" as="font" type="font/woff2" crossorigin>'
             f'<link rel="stylesheet" href="{r}assets/fonts.css?v={VER}"><link rel="stylesheet" href="{r}assets/main.css?v={VER}">{jsonld(page, d)}</head>')
     cls = page.get('body_class', '')
     html = head + f'<body class="{cls}">' + header(d, dark=page.get('dark_header', False)) + '<main>' + body + '</main>' + footer(d) + f'<script src="{r}assets/main.js?v={VER}" defer></script></body></html>'
