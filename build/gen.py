@@ -97,7 +97,7 @@ def about_block(c, d):
     busts = (f'<div class="about__bust about__bust--l" data-par=".14"><img class="rv" src="{r}assets/img/bust-david.webp" alt="" width="735" height="820" loading="lazy" decoding="async"></div>'
              f'<div class="about__bust about__bust--r" data-par=".2"><img class="rv d2" src="{r}assets/img/bust-venus.webp" alt="" width="651" height="820" loading="lazy" decoding="async"></div>')
     return (f'<section class="sec sec--lg about-sec" id="about"><div class="wrap col" style="gap:10px"><div class="about__block">{busts}{pills}'
-            f'{head_block(c["eyebrow"], esc(c["title"]))}</div><div class="stats">{stats}</div></div></section>')
+            f'{head_block(c["eyebrow"], esc(c["title"]))}</div><div class="stats stats--rows">{stats}</div></div></section>')
 
 def services(c, d):
     r = rel(d)
@@ -120,7 +120,7 @@ def benefit(c, d):
 
 def work(c, d):
     r = rel(d)
-    def card(s, i): return f'<div class="wcard rv" data-step="{i}"><div class="zoom">{img(r + s["img"], s["alt"], 844, 870)}</div><div class="wcard__txt"><h3>{esc(s["title"])}</h3><span class="wcard__rule" aria-hidden="true"></span><p>{esc(s["text"])}</p></div></div>'
+    def card(s, i): return f'<div class="wcard rv" data-step="{i}" style="--i:{i}"><div class="zoom">{img(r + s["img"], s["alt"], 844, 870)}</div><div class="wcard__txt"><h3>{esc(s["title"])}</h3><span class="wcard__rule" aria-hidden="true"></span><p>{esc(s["text"])}</p></div></div>'
     st = c['steps']
     nodes = ''.join(f'<i class="work__node work__node--{"l" if i % 2 == 0 else "r"}" data-node="{i}"></i>' for i in range(len(st)))
     stage = f'<div class="work__spine" aria-hidden="true"><span class="work__track"></span><span class="work__line"></span>{nodes}</div>'
@@ -149,20 +149,20 @@ def plans(c, d):
                 f'<div class="plan__fb"><div class="plan__line"></div><div class="plan__feat">{feats}</div>{b}</div><p class="plan__note">“{esc(p["note"])}”</p></div>')
     cards = ''.join(plan(p, i) for i, p in enumerate(c['plans']))
     headrow = f'<div class="row rv"><div class="head head--left"><div class="head__tag"><span class="eyebrow">{esc(c["eyebrow"])}</span><h2 style="max-width:390px">{esc(c["title"])}</h2></div></div><p style="max-width:304px">{esc(c["text"])}</p></div>'
-    return f'<section class="sec sec--lg sec--lg-b sec--panel" id="{c.get("id","offers")}"><div class="wrap col col--left">{headrow}<div class="plans">{cards}</div></div></section>'
+    return f'<section class="sec sec--lg sec--lg-b sec--panel" id="{c.get("id","offers")}"><div class="wrap col col--left">{headrow}<div class="plans swipe-sm">{cards}</div></div></section>'
 
 def team(c, d, active=0):
     r = rel(d)
     cards = ''.join(f'<a class="tcard{" is-active" if i == active else ""}" href="{r}doctors/#{m["id"]}">{img(r + m["img"], m["alt"], 914, 1080)}<div class="tcard__name"><h4>{esc(m["name"])}</h4><p>{esc(m["role"])}</p></div></a>' for i, m in enumerate(c['members']))
     few = ' team--few' if len(c['members']) < 4 else ''
-    return f'<section class="sec sec--lg" id="team"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}<div class="team rv{few}">{cards}</div></div></section>'
+    return f'<section class="sec sec--lg" id="team"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}<div class="team swipe-sm rv{few}">{cards}</div></div></section>'
 
 def testimonials(c, d):
     r = rel(d)
     slides = ''.join(f'<div class="tslide"><div class="tslide__img">{img(r + t["img"], t["alt"], 1056, 916)}</div><div class="tslide__card"><h3>“{esc(t["quote"])}”</h3><div class="tslide__who"><p>{esc(t["name"])}</p><p class="small">{esc(t["role"])}</p></div></div></div>' for t in c['items'])
     nav = f'<div class="slider__nav"><button class="slider__btn slider__btn--prev" aria-label="Previous">{ARROW_L}</button><button class="slider__btn slider__btn--next" aria-label="Next">{ARROW_R}</button></div>'
     return (f'<section class="sec" id="reviews"><div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]))}'
-            f'<div class="slider rv"><div class="slider__track">{slides}</div>{nav}</div></div></section>')
+            f'<div class="slider rv"><div class="slider__track swipe-sm">{slides}</div>{nav}</div></div></section>')
 
 def journey(c, d):
     r = rel(d)
@@ -197,18 +197,18 @@ def split(c, d):
 
 def sticky_rows(c, d):
     r = rel(d)
-    rows = ''.join(f'<div class="srow"><div class="srow__img">{img(r + s["img"], s["alt"], 1076, 800)}</div><div class="srow__txt"><h2>{esc(s["title"])}</h2><p>{esc(s["text"])}</p></div></div>' for s in c['rows'])
+    rows = ''.join(f'<div class="srow" style="--i:{i}"><div class="srow__img">{img(r + s["img"], s["alt"], 1076, 800)}</div><div class="srow__txt"><h2>{esc(s["title"])}</h2><p>{esc(s["text"])}</p></div></div>' for i, s in enumerate(c['rows']))
     return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="stack">{rows}</div></div></section>'
 
 def stats_row(c, d):
     stats = ''.join(f'<div class="stat rv d{i}"><p>{esc(s["label"])}</p><h2 data-count="{s["n"]}" data-prefix="{s.get("prefix","")}" data-suffix="{s.get("suffix","")}">{s.get("prefix","")}0{s.get("suffix","")}</h2></div>' for i, s in enumerate(c['stats']))
     headrow = f'<div class="row rv" style="align-items:center"><h2 style="max-width:570px">{esc(c["title"])}</h2><p style="max-width:398px">{esc(c["text"])}</p></div>'
-    return f'<section class="sec"><div class="wrap col">{headrow}<div class="stats">{stats}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{headrow}<div class="stats stats--rows">{stats}</div></div></section>'
 
 def detail_cards(c, d):
     """Treatment details (procedure time / downtime / anaesthesia / results) as the stat-card row, text only."""
     cards = ''.join(f'<div class="stat rv d{i}" style="gap:16px"><p>{esc(k)}</p><h3>{esc(v)}</h3></div>' for i, (k, v) in enumerate(c['items']))
-    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow","Treatment details"), esc(c["title"]), esc(c.get("text","")))}<div class="stats">{cards}</div></div></section>'
+    return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow","Treatment details"), esc(c["title"]), esc(c.get("text","")))}<div class="stats stats--grid">{cards}</div></div></section>'
 
 def contact_block(c, d):
     r = rel(d)
@@ -237,7 +237,7 @@ def gallery(c, d):
 
 def az(c, d):
     r = rel(d)
-    groups = ''.join(f'<div class="az__group rv d{i%3}"><h4>{esc(g["title"])}</h4>{"".join(f"<a href={chr(34)}{r}{h}{chr(34)}>{esc(t)}</a>" for t, h in g["items"])}</div>' for i, g in enumerate(c['groups']))
+    groups = ''.join(f'<details class="az__group rv d{i%3}" open><summary><h4>{esc(g["title"])}</h4><span class="az__count">{len(g["items"])}</span></summary><div class="az__links">{"".join(f"<a href={chr(34)}{r}{h}{chr(34)}>{esc(t)}</a>" for t, h in g["items"])}</div></details>' for i, g in enumerate(c['groups']))
     return f'<section class="sec"><div class="wrap col">{head_block(c.get("eyebrow"), esc(c["title"]), esc(c.get("text","")))}<div class="az">{groups}</div></div></section>'
 
 def article(c, d):
@@ -282,7 +282,7 @@ def render(page):
     head = (f'<!doctype html><html lang="en-MY"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{esc(page["title"])}</title><meta name="description" content="{esc(page["desc"])}"><link rel="canonical" href="{canonical}">'
             f'<meta property="og:title" content="{esc(page["title"])}"><meta property="og:description" content="{esc(page["desc"])}"><meta property="og:image" content="{ogimg}"><meta property="og:type" content="website"><meta property="og:url" content="{canonical}">'
-            f'<link rel="icon" href="{r}assets/img/favicon.png"><link rel="preload" href="{r}assets/fonts/cormorant-garamond-500-latin.woff2" as="font" type="font/woff2" crossorigin>'
+            f'<link rel="icon" href="{r}assets/img/favicon.png"><link rel="preload" href="{r}assets/fonts/cormorant-garamond-500-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{r}assets/fonts/manrope-var-latin.woff2" as="font" type="font/woff2" crossorigin>'
             f'<link rel="stylesheet" href="{r}assets/fonts.css?v={VER}"><link rel="stylesheet" href="{r}assets/main.css?v={VER}">{jsonld(page, d)}</head>')
     cls = page.get('body_class', '')
     html = head + f'<body class="{cls}">' + header(d, dark=page.get('dark_header', False)) + '<main>' + body + '</main>' + footer(d) + f'<script src="{r}assets/main.js?v={VER}" defer></script></body></html>'

@@ -19,7 +19,7 @@ for p in PAGES:
         c.sweep(step=max(400, H - 100), pause=.12); c.js("window.scrollTo(0,0)"); time.sleep(.4)
         c.js("document.querySelectorAll('.rv,.zoom').forEach(e=>{e.style.transition='none';e.classList.add('is-in')})"); time.sleep(.5)
         d = json.loads(c.js("""JSON.stringify({h:document.documentElement.scrollHeight, sw:document.documentElement.scrollWidth, title:document.title, h1:[...document.querySelectorAll('h1')].map(h=>h.innerText.replace(/\\n/g,' ')), 
-          over:[...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();const cs=getComputedStyle(e);return r.right>innerWidth+1&&r.width>0&&cs.position!=='fixed'&&!e.closest('.approach__track,.sig__track,.post__band,.hero,.slider__track,.footer__mark,.deco,.about__bust,.work__stage')}).slice(0,6).map(e=>e.tagName+'.'+(e.className||'').toString().split(' ')[0]+' r='+Math.round(e.getBoundingClientRect().right)),
+          over:[...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();const cs=getComputedStyle(e);return r.right>innerWidth+1&&r.width>0&&cs.position!=='fixed'&&!e.closest('.approach__track,.sig__track,.post__band,.hero,.slider__track,.footer__mark,.deco,.about__bust,.work__stage,.swipe-sm')}).slice(0,6).map(e=>e.tagName+'.'+(e.className||'').toString().split(' ')[0]+' r='+Math.round(e.getBoundingClientRect().right)),
           broken:[...document.images].filter(i=>i.complete&&i.naturalWidth===0).map(i=>i.src.split('/').pop()).slice(0,6), imgs:document.images.length})"""))
         errs, bad = c.drain()
         issues = []

@@ -23,7 +23,7 @@
   --glass-dark:rgba(255,255,255,.07);
   --tag-1:#C9A961;--tag-2:#E8DBB5;--tag-3:#1F3A5F;--tag-4:#8C6A3F;
   --font-display:"Cormorant Garamond",Garamond,Georgia,"Times New Roman",serif;
-  --font-body:"Inter","Inter Placeholder",sans-serif;
+  --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   --ease-out:cubic-bezier(.16,1,.3,1);
   --container:1120px;--pad-x:30px;--sec:60px;--sec-lg:120px;--gap:64px;
 }
@@ -59,14 +59,14 @@ p{font-size:16px;line-height:24px}
 .head__tag{display:flex;flex-direction:column;align-items:center;gap:16px}
 .head--left .head__tag{align-items:flex-start}
 .head p{max-width:548px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--champagne);font-size:16px;line-height:24px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-weight:500;color:var(--champagne);font-size:16px;line-height:24px}
 .eyebrow::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--gold-2)}
 .eyebrow--light{color:var(--on-dark)}.eyebrow--light::before{background:#fff}
 .row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
 .row > p{max-width:310px}
 
 /* ---------- buttons ---------- */
-.btn{display:inline-flex;align-items:center;gap:12px;height:56px;padding:8px 8px 8px 32px;border-radius:60px;background:var(--ink);color:var(--navy);font-size:16px;line-height:24px;position:relative;white-space:nowrap;transition:background .4s linear,color .4s linear}
+.btn{display:inline-flex;align-items:center;gap:12px;height:56px;font-weight:600;padding:8px 8px 8px 32px;border-radius:60px;background:var(--ink);color:var(--navy);font-size:16px;line-height:24px;position:relative;white-space:nowrap;transition:background .4s linear,color .4s linear}
 .btn__circle{width:40px;height:40px;border-radius:999px;background:var(--navy);color:var(--gold-3);display:grid;place-items:center;flex:none;transition:transform .4s var(--ease-out),background .4s linear}
 .btn__circle svg{width:16px;height:16px;transition:transform .4s var(--ease-out)}
 .btn:hover .btn__circle svg{transform:rotate(-45deg)}
@@ -85,7 +85,7 @@ p{font-size:16px;line-height:24px}
 .header__in{width:100%;max-width:var(--container);height:56px;display:flex;justify-content:space-between;align-items:center}
 .header__logo img{height:28px;width:auto}.header__logo .logo-mobile{display:none}.header--dark .logo-desktop{display:none}.header--dark .logo-mobile{display:block}
 .nav{display:flex;align-items:center;padding:8px;border-radius:60px;background:var(--glass);backdrop-filter:blur(6px);box-shadow:inset 0 0 0 1px var(--line-soft)}
-.nav a{display:flex;align-items:center;height:32px;padding:4px 20px;border-radius:50px;color:var(--ink);transition:background .3s}
+.nav a{display:flex;align-items:center;height:32px;padding:4px 20px;border-radius:50px;font-weight:500;color:var(--ink);transition:background .3s}
 .nav a:hover,.nav a[aria-current="page"]{background:rgba(255,255,255,.1);color:var(--gold-3)}
 .header--dark .nav{background:var(--glass-dark)}
 
@@ -271,7 +271,7 @@ p{font-size:16px;line-height:24px}
 /* ---------- FAQ ---------- */
 .faq{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;row-gap:28px;width:100%;align-items:start}
 .faq__item{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line-soft);border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:8px;cursor:pointer}
-.faq__q{display:flex;align-items:center;gap:20px;justify-content:space-between}
+.faq__q{display:flex;align-items:center;gap:20px;justify-content:space-between;width:100%;text-align:left}
 .faq__q p{font-family:var(--font-display);font-weight:600;font-size:21px;line-height:27px;color:var(--ink)}
 .faq__icon{position:relative;width:24px;height:24px;flex:none}
 .faq__icon::before,.faq__icon::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:2px;background:var(--ink);transform:translate(-50%,-50%);background:var(--gold-2)}
@@ -367,7 +367,13 @@ p{font-size:16px;line-height:24px}
 .gallery figcaption{font-family:var(--font-display);font-weight:600;font-size:19px;color:var(--ink)}
 .az{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
 .az__group{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line-soft);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px}
-.az__group h4{color:var(--ink);margin-bottom:4px}
+.az__group h4{color:var(--ink)}
+.az__group{display:block}
+.az__group summary{display:flex;justify-content:space-between;align-items:center;gap:12px;list-style:none;margin-bottom:12px;cursor:default}
+.az__group summary::-webkit-details-marker{display:none}
+.az__count{display:none}
+.az__links{display:flex;flex-direction:column}
+.swipe-dots{display:none}
 .az__group a{display:block;color:var(--body);padding:4px 0;border-bottom:1px solid var(--line-soft);transition:color .3s}
 .az__group a:hover{color:var(--gold-3)}
 .article{width:100%;max-width:760px;display:flex;flex-direction:column;gap:20px}
@@ -499,6 +505,53 @@ p{font-size:16px;line-height:24px}
   .info-grid{grid-template-columns:1fr}
   .gallery{grid-template-columns:1fr 1fr}
   .az{grid-template-columns:1fr}
-  .srow{position:static}
   .wa{width:52px;height:52px;right:16px;bottom:16px}
+
+  /* ---- phone: card sets become swipe rows (one card in view, the next peeking) ---- */
+  .swipe-sm{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;gap:12px!important;margin-left:-20px;margin-right:-20px;padding:0 20px 2px;scroll-padding-inline:20px;scrollbar-width:none;overscroll-behavior-x:contain;width:auto!important;height:auto!important;transform:none!important;align-items:stretch;align-self:stretch!important;max-width:none}
+  .swipe-sm::-webkit-scrollbar{display:none}
+  .swipe-sm > *{flex:0 0 84%!important;width:auto!important;min-width:0!important;max-width:none;scroll-snap-align:start}
+  .cards3.swipe-sm > .scard{height:430px}
+  .team.swipe-sm > .tcard{height:440px}
+  .plans.swipe-sm > .plan,.slider__track.swipe-sm > .tslide{flex-basis:86%!important}
+  .slider{overflow:visible}
+  .swipe-dots{display:flex;justify-content:center;gap:6px;margin-top:18px;width:100%}
+  .swipe-dots i{width:6px;height:6px;border-radius:6px;background:rgba(244,239,230,.18);transition:width .35s var(--ease-out),background .35s}
+  .swipe-dots i.is-on{width:20px;background:var(--gold-2)}
+
+  /* ---- phone: stats as one compact list, treatment details as a 2x2 grid ---- */
+  .stats--rows{gap:0;background:var(--panel);border-radius:20px;box-shadow:inset 0 0 0 1px var(--line-soft);padding:4px 20px}
+  .stats--rows .stat{flex-direction:row-reverse;align-items:center;justify-content:flex-end;gap:18px;min-height:0;padding:16px 0;background:none;box-shadow:none;border-radius:0;border-bottom:1px solid var(--line-soft)}
+  .stats--rows .stat:last-child{border-bottom:0}
+  .stats--rows .stat h2{font-size:46px;line-height:48px;min-width:74px}
+  .stats--rows .stat p{font-size:14px;line-height:20px;max-width:none}
+  .stats--grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stats--grid .stat{min-height:0;padding:16px;gap:8px!important;justify-content:flex-start}
+  .stats--grid .stat p{font-size:13px;line-height:18px}
+  .stats--grid .stat h3{font-size:23px;line-height:27px}
+
+  /* ---- phone: How it works as a stacking deck, in step order ---- */
+  .work__cols{gap:14px;padding-bottom:30px}
+  .work__col{display:contents}
+  .wcard{position:sticky;top:calc(80px + var(--i) * 12px);order:var(--i);padding:10px 10px 22px;gap:16px}
+  .wcard img{aspect-ratio:16/10}
+  .wcard__txt{gap:10px}
+
+  /* ---- phone: "Four things" rows stack the same way ---- */
+  .stack{gap:14px}
+  .srow{position:sticky;top:calc(80px + var(--i) * 12px);gap:16px;padding:10px 10px 22px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line),0 20px 40px rgba(0,0,0,.35)}
+  .srow__img{aspect-ratio:16/10}
+  .srow__txt{padding:0 8px;gap:12px}.srow__txt h2{font-size:30px;line-height:34px}
+
+  /* ---- phone: Treatments A–Z groups collapse ---- */
+  .az{gap:10px}
+  .az__group{padding:18px 20px}
+  .az__group summary{cursor:pointer;margin-bottom:12px}
+  .az__group:not([open]) summary{margin-bottom:0}
+  .az__count{display:grid;place-items:center;min-width:28px;height:28px;padding:0 8px;border-radius:28px;font-size:13px;color:var(--navy);background:var(--gold-2);margin-left:auto}
+  .az__group summary::after{content:"+";color:var(--gold-2);font-size:24px;line-height:1;width:16px;text-align:center}
+  .az__group[open] summary::after{content:"−"}
+
+  /* ---- phone: portrait rows (doctors, story) crop to the face so each row is shorter ---- */
+  .split__img{aspect-ratio:4/3}.split__img img{object-position:50% 18%}
 }
