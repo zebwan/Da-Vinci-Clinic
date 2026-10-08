@@ -329,19 +329,6 @@ p{font-size:16px;line-height:24px}
 .wa{position:fixed;right:20px;bottom:20px;z-index:60;width:56px;height:56px;border-radius:999px;background:#25D366;display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .wa svg{width:30px;height:30px;fill:#fff}
 
-/* ---------- Decorative marble sculptures at the page edges ---------- */
-.sec{position:relative;z-index:0;overflow-x:clip}
-.deco{position:absolute;top:-24px;height:340px;z-index:-1;pointer-events:none}
-.deco img{height:100%;width:auto;max-width:none;filter:drop-shadow(0 24px 36px rgba(0,0,0,.45))}
-.deco--l{left:0;transform:translateX(-72%)}.deco--r{right:0;transform:translateX(72%)}
-.deco--flip img{scale:-1 1}
-.deco--pair{top:20px;height:380px}
-.deco--hero{top:118px;right:6%;height:330px;transform:none;z-index:0}
-.benefit__panel{position:relative}.benefit__panel > *:not(.deco){position:relative;z-index:1}
-.deco--panel{top:auto;bottom:0;right:28px;height:270px;transform:none;z-index:0}
-.benefit__panel .benefit__list,.benefit__panel .head p{max-width:calc(100% - 230px)}
-.deco--panel img{filter:none}
-
 /* ---------- Generic blocks reused by service / branch pages ---------- */
 .split{display:flex;justify-content:space-between;align-items:center;gap:24px;width:100%}
 .split__img{width:549px;flex:none;border-radius:20px;overflow:hidden;aspect-ratio:549/596}
@@ -432,8 +419,6 @@ p{font-size:16px;line-height:24px}
   .hero__bottom{position:relative;z-index:1}
   .ihero{padding:140px 30px 40px}
   .about__block{padding:60px 0}
-  .benefit__panel .benefit__list,.benefit__panel .head p{max-width:calc(100% - 200px)}
-  .deco{height:250px}.deco--l{transform:translateX(-78%)}.deco--r{transform:translateX(78%)}.deco--pair{height:270px}.deco--hero{display:none}.deco--panel{height:240px;transform:none}
   .about__bust{height:320px;margin-top:-160px}.about__bust--l{left:-190px}.about__bust--r{right:-190px}
   .tagpill--1{left:10px}.tagpill--2{right:10px}.tagpill--3{left:20px;top:auto;bottom:10px}.tagpill--4{right:20px;top:auto;bottom:10px}
   .stats{flex-wrap:wrap}.stat{flex:1 1 calc(50% - 8px)}
@@ -484,8 +469,6 @@ p{font-size:16px;line-height:24px}
   .row{flex-direction:column;align-items:flex-start}
   .tagpill{display:none} /* template hides the four rotated tags on phone */
   .about__block{padding:180px 0 0}
-  .benefit__panel .benefit__list,.benefit__panel .head p{max-width:none}
-  .deco{top:-6px;height:150px;opacity:.55}.deco--l{transform:translateX(-62%)}.deco--r{transform:translateX(62%)}.deco--pair{top:0;height:170px}.deco--panel{display:none}
   .about__bust{top:0;margin-top:0;height:200px}.about__bust--l{left:-46px}.about__bust--r{right:-46px}
   .stats{flex-direction:column}.stat{flex:none}
   .cards3{flex-direction:column}.scard{flex:none;height:420px;min-width:0}
