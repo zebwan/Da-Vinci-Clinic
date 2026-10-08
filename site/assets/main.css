@@ -428,7 +428,7 @@ p{font-size:16px;line-height:24px}
   .cards3{flex-direction:column}.scard{flex:none;height:420px;min-width:0}
   .why__photo{height:275px}.why__grid{grid-template-columns:1fr}.icard{min-height:0;gap:60px}
   .benefit__photo{aspect-ratio:350/197}
-  .work .head{position:static;transform:none!important;opacity:1!important}
+  .rv{transform:translateY(80px) scale(.7)} /* template phone reveal rises 80px, not 200 */
   .work__cols{flex-direction:column;gap:24px}.work__col{width:100%;gap:24px}.work__col--a,.work__col--b{padding:0}
   .approach{padding-bottom:60px}.approach__pin{position:static;gap:40px}
   .approach__track{flex-direction:column;gap:24px;transform:none!important;align-items:stretch}

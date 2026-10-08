@@ -73,7 +73,7 @@
   };
   const onScroll = () => {
     const y = window.scrollY;
-    if (workHead && !isPhone() && !reduced) {
+    if (workHead && !reduced) {   /* template keeps the sticky shrink/fade on phone too */
       const top = work.getBoundingClientRect().top + y;         /* section top in page coords */
       const p = Math.min(1, Math.max(0, (y - (top - 232)) / 1000));
       const sc = 1 - 0.4 * p, op = Math.max(0, 1 - Math.pow(p, 0.8) * 1.05);
