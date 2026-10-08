@@ -190,6 +190,27 @@
     if (v) { const vio = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) v.play().catch(() => {}); else v.pause(); })); vio.observe(v); }
   });
 
+  /* ---- phone swipe rows: progress dots under each row ---- */
+  document.querySelectorAll('.swipe-sm').forEach(row => {
+    const items = [...row.children]; if (items.length < 2) return;
+    const dots = document.createElement('div'); dots.className = 'swipe-dots'; dots.setAttribute('aria-hidden', 'true');
+    dots.innerHTML = items.map(() => '<i></i>').join(''); row.after(dots);
+    const ds = [...dots.children];
+    const update = () => {
+      const step = items[0].getBoundingClientRect().width + 12;
+      const k = Math.min(items.length - 1, Math.round(row.scrollLeft / Math.max(1, step)));
+      ds.forEach((d, j) => d.classList.toggle('is-on', j === k));
+    };
+    row.addEventListener('scroll', update, { passive: true }); window.addEventListener('resize', update); update();
+  });
+
+  /* ---- Treatments A–Z: groups are collapsible on phone only ---- */
+  const azGroups = [...document.querySelectorAll('details.az__group')];
+  if (azGroups.length) {
+    if (window.innerWidth < 768) azGroups.forEach((g, i) => { if (i > 0) g.removeAttribute('open'); });
+    azGroups.forEach(g => g.querySelector('summary').addEventListener('click', e => { if (window.innerWidth >= 768) e.preventDefault(); }));
+  }
+
   /* ---- current nav link ---- */
   const here = location.pathname.replace(/index\.html$/, '');
   document.querySelectorAll('.nav a, .mnav a').forEach(a => {
