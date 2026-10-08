@@ -211,6 +211,15 @@ p{font-size:16px;line-height:24px}
 .sig__bar i{display:block;height:100%;width:100%;background:var(--gold-2);transform:scaleX(0);transform-origin:0 50%}
 .sig__tab.is-done .sig__bar i{transform:scaleX(1);opacity:.45}
 .sig__nav{display:flex;gap:10px;flex:none}
+/* What's on: promo banners in the same slider */
+.promo .sig__slider{gap:28px}
+.promo .slide{display:block;gap:0}
+.promo__slide{border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.promo__slide img{width:100%;height:auto;aspect-ratio:1600/746;object-fit:cover}
+.promo .slide:not(.is-active){pointer-events:none}
+.promo .sig__tab{font-family:var(--font-body);font-weight:500;font-size:13px;line-height:18px}
+.promo .sig__tabs{gap:12px}
+.promo__head{align-items:flex-end}.promo__head .head{gap:14px}.promo__head .head p{max-width:440px}
 
 /* ---------- Pricing / offers ---------- */
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
@@ -428,6 +437,7 @@ p{font-size:16px;line-height:24px}
   .benefit{flex-direction:column}.benefit__photo{width:100%;aspect-ratio:750/421}
   .work__cols{gap:28px}.work__col{width:361px;gap:200px}.work__col--a{padding-bottom:182px}.work__col--b{padding-top:182px}
   .work__node::before{display:none}
+  .promo .sig__tab{font-size:12px}
   .slide{gap:40px}.slide__txt{width:300px;min-height:auto}.slide__img{width:410px;height:300px}.slide__txt h3{font-size:30px;line-height:36px}
   .sig__tab{font-size:16px;line-height:19px}.sig__tab span{white-space:normal}.sig__tabs{gap:12px}
   .plans{grid-template-columns:1fr 1fr}
@@ -477,7 +487,10 @@ p{font-size:16px;line-height:24px}
   .why__photo{height:275px}.why__grid{grid-template-columns:1fr}.icard{min-height:0;gap:60px}
   .benefit__photo{aspect-ratio:350/197}
   .rv{transform:translateY(80px) scale(.7)} /* template phone reveal rises 80px, not 200 */
-  .work__cols{flex-direction:column;gap:24px}.work__spine{display:none}.work__col{width:100%;gap:24px}.work__col--a,.work__col--b{padding:0}
+  .work__cols{flex-direction:column;gap:24px}.work__spine{display:none}
+  /* phone: the pinned film is cropped to a tall screen, so aim it at Venus's face rather than the gap between the busts */
+  .work__bgv video{object-position:74% 40%}
+  .promo__slide img{aspect-ratio:1/1}.work__col{width:100%;gap:24px}.work__col--a,.work__col--b{padding:0}
   .sig__slider{gap:28px}.sig__tab{font-size:0;gap:0}.sig__tab span{display:none}.sig__tabs{gap:8px}.sig__ctrl{align-items:center;gap:20px}
   .slide{width:var(--container);flex-direction:column-reverse;gap:16px}.slide__txt h3{font-size:27px;line-height:33px}
   .slide__txt{width:100%;padding:0;gap:16px}.slide__txt .t{gap:12px}
