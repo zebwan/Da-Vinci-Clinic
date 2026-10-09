@@ -66,6 +66,12 @@ def footer(d):
             f'</div></footer>'
             f'<a class="wa" href="{SITE["wa_main"]}" target="_blank" rel="noopener" aria-label="WhatsApp Da Vinci Clinic">{WA_ICON}</a>')
 
+def bgvid(r, wide, tall=None, mq=''):
+    """Looping background film from Magnific (Kling 3.0). No src in the markup: main.js picks wide or tall by `mq`,
+    WebM or MP4 by support, loads it when the block nears the viewport and fades it in over the still once it plays."""
+    t = f' data-tall="{r}assets/video/{tall}" data-mq="{mq}"' if tall else ''
+    return f'<video class="bgvid" muted loop playsinline preload="none" aria-hidden="true" data-wide="{r}assets/video/{wide}"{t}></video>'
+
 def hero_home(c, d):
     """Home hero: one generated marble sculpture covers the whole section (16:9 for desktop and landscape, 9:16 for
     portrait tablets and phones), the copy sits in the navy the image leaves free."""
@@ -73,7 +79,8 @@ def hero_home(c, d):
     avs = ''.join(img(f'{r}assets/img/av-{i}.webp', '', 45, 45, lazy=False) for i in (1, 2, 3))
     art = (f'<picture><source media="(max-width: 1199.98px) and (orientation: portrait)" srcset="{r}assets/img/hero-sculpt-tall.webp" width="1080" height="1920">'
            f'<img src="{r}assets/img/hero-sculpt-wide.webp" alt="" width="2240" height="1260" fetchpriority="high" decoding="async"></picture>')
-    return (f'<section class="hero" id="top"><div class="hero__bg">{art}</div>'
+    film = bgvid(r, 'hero-wide', 'hero-tall', '(max-width: 1199.98px) and (orientation: portrait)')
+    return (f'<section class="hero" id="top"><div class="hero__bg"><div class="hero__media">{art}{film}</div></div>'
             f'<div class="hero__in"><div class="hero__top">'
             f'<span class="hero__tag rv d4">{esc(c["tag"])}</span>'
             f'<h1><span class="rv">{esc(c["h1"][0])}</span><span class="line2 rv d1">{MARK.replace("{r}", r)}<span>{esc(c["h1"][1])}</span></span><span class="rv d2">{esc(c["h1"][2])}</span></h1></div>'
@@ -99,8 +106,9 @@ def about_block(c, d):
     set in the empty navy beside it (below it on phone), the three stats underneath."""
     stats = ''.join(f'<div class="stat rv d{i}"><p>{esc(s["label"])}</p><h2 data-count="{s["n"]}" data-prefix="{s.get("prefix","")}" data-suffix="{s.get("suffix","")}">{s.get("prefix","")}0{s.get("suffix","")}</h2></div>' for i, s in enumerate(c['stats']))
     r = rel(d)
-    art = (f'<picture class="about__art zoom"><source media="(max-width: 767.98px)" srcset="{r}assets/img/about-bust-tall.webp" width="1080" height="1440">'
-           f'<img src="{r}assets/img/about-bust-wide.webp" alt="Classical marble bust lit in a dark studio" width="2240" height="1260" loading="lazy" decoding="async"></picture>')
+    art = (f'<div class="about__art zoom"><picture><source media="(max-width: 767.98px)" srcset="{r}assets/img/about-bust-tall.webp" width="900" height="1600">'
+           f'<img src="{r}assets/img/about-bust-wide.webp" alt="Classical marble bust lit in a dark studio" width="2240" height="1260" loading="lazy" decoding="async"></picture>'
+           f'{bgvid(r, "about-wide", "about-tall", "(max-width: 767.98px)")}</div>')
     return (f'<section class="sec sec--lg about-sec" id="about"><div class="wrap col"><div class="about__stage">{art}'
             f'<div class="about__copy">{head_block(c["eyebrow"], esc(c["title"]), left=True)}</div></div><div class="stats stats--rows">{stats}</div></div></section>')
 
@@ -129,9 +137,9 @@ def work(c, d):
     st = c['steps']
     nodes = ''.join(f'<i class="work__node work__node--{"l" if i % 2 == 0 else "r"}" data-node="{i}"></i>' for i in range(len(st)))
     stage = f'<div class="work__spine" aria-hidden="true"><span class="work__track"></span><span class="work__line"></span>{nodes}</div>'
-    # Da Vinci's sculpture film (their homepage hero) pinned behind the steps while the cards scroll over it
-    bg = (f'<div class="work__bg" aria-hidden="true"><div class="work__bgv"><video muted loop playsinline preload="none" poster="{r}assets/img/hero-video-poster.jpg">'
-          f'<source src="{r}assets/video/dv-hero-1920.webm" type="video/webm"><source src="{r}assets/video/dv-hero-1920.mp4" type="video/mp4"></video></div></div>')
+    # generated marble film (light drifting over gold-veined marble) pinned behind the steps while the cards scroll over it
+    bg = (f'<div class="work__bg" aria-hidden="true"><div class="work__bgv">{img(r + "assets/img/marble-poster.webp", "", 1600, 900)}'
+          f'{bgvid(r, "marble-wide")}</div></div>')
     return (f'<section class="sec work">{bg}<div class="wrap col">{head_block(c["eyebrow"], esc(c["title"]), esc(c["text"]), rv=False)}'
             f'<div class="work__cols">{stage}<div class="work__col work__col--a">{card(st[0],0)}{card(st[2],2)}</div><div class="work__col work__col--b">{card(st[1],1)}{card(st[3],3)}</div></div></div></section>')
 
@@ -322,7 +330,8 @@ def main():
     shutil.copytree(os.path.join(ROOT, 'assets/img'), os.path.join(OUT, 'assets/img'))
     shutil.copytree(os.path.join(ROOT, 'assets/fonts'), os.path.join(OUT, 'assets/fonts'))
     os.makedirs(os.path.join(OUT, 'assets/video'), exist_ok=True)
-    for v in ('dv-hero-1280.mp4', 'dv-hero-1280.webm', 'dv-hero-1920.mp4', 'dv-hero-1920.webm'): shutil.copy(os.path.join(ROOT, 'assets/video', v), os.path.join(OUT, 'assets/video', v))
+    for v in ('dv-hero-1280.mp4', 'dv-hero-1280.webm', 'dv-hero-1920.mp4', 'dv-hero-1920.webm',
+              *(f'{n}.{e}' for n in ('hero-wide', 'hero-tall', 'about-wide', 'about-tall', 'marble-wide') for e in ('mp4', 'webm'))): shutil.copy(os.path.join(ROOT, 'assets/video', v), os.path.join(OUT, 'assets/video', v))
     shutil.copy(os.path.join(ROOT, 'build/src/main.css'), os.path.join(OUT, 'assets/main.css'))
     shutil.copy(os.path.join(ROOT, 'build/src/main.js'), os.path.join(OUT, 'assets/main.js'))
     shutil.copy(os.path.join(ROOT, 'build/src/fonts.css'), os.path.join(OUT, 'assets/fonts.css'))

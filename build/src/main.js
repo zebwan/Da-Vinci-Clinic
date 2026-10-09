@@ -31,7 +31,7 @@
     requestAnimationFrame(() => document.querySelectorAll('.hero .rv, .ihero .rv').forEach(e => { e.classList.add('is-in'); io.unobserve(e); }));
   }
   /* hero: the sculpture zooms out from 1.1 over 2s, pill + proof appear at 1.2s (probe hero_appear) */
-  const heroBg = document.querySelector('.hero__bg img');
+  const heroBg = document.querySelector('.hero__media');
   if (heroBg && !reduced) {
     requestAnimationFrame(() => {
       heroBg.style.transition = 'transform 2s cubic-bezier(.16,1,.3,1)';
@@ -104,15 +104,27 @@
     onScroll();
   }
 
-  /* ---- pinned background film: load on approach, play only while the section is on screen ---- */
-  document.querySelectorAll('.work__bgv video').forEach(v => {
-    if (reduced) return;   /* poster only */
-    let loaded = false;
+  /* ---- generated background films (hero, About, How it works): pick wide/tall by the block's media query and WebM/MP4
+     by support, load after the page has loaded and only near the viewport, play on screen, pause off screen,
+     fade in over the still once playing. Skipped for reduced motion and Save-Data (the still stays). ---- */
+  const saveData = navigator.connection && navigator.connection.saveData;
+  const vids = [...document.querySelectorAll('video.bgvid')];
+  const startVids = () => vids.forEach(v => {
+    if (reduced || saveData) return;
+    const mq = v.dataset.tall ? matchMedia(v.dataset.mq) : null;
+    const ext = v.canPlayType('video/webm; codecs="vp9"') === 'probably' ? 'webm' : 'mp4';
+    let cur = '', inView = false;
+    const src = () => ((mq && mq.matches) ? v.dataset.tall : v.dataset.wide) + '.' + ext;
+    const load = () => { const s = src(); if (s !== cur) { cur = s; v.classList.remove('is-on'); v.src = s; v.load(); } };
+    v.addEventListener('playing', () => v.classList.add('is-on'));
     new IntersectionObserver(es => es.forEach(en => {
-      if (en.isIntersecting) { if (!loaded) { v.preload = 'auto'; v.load(); loaded = true; } v.play().catch(() => {}); }
-      else v.pause();
-    }), { rootMargin: '300px 0px' }).observe(v.closest('.work__bg'));
+      inView = en.isIntersecting;
+      if (inView) { load(); v.play().catch(() => {}); } else v.pause();
+    }), { rootMargin: '300px 0px' }).observe(v.parentElement);
+    if (mq) mq.addEventListener('change', () => { if (cur) { load(); if (inView) v.play().catch(() => {}); } });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) v.pause(); else if (inView) v.play().catch(() => {}); });
   });
+  if (document.readyState === 'complete') startVids(); else window.addEventListener('load', startVids);
 
   /* ---- Signature treatments: auto-playing slider (6 s), pauses on hover / focus / off-screen / hidden tab, swipe on touch ---- */
   document.querySelectorAll('.sig__slider').forEach(sl => {
