@@ -86,10 +86,18 @@ function start() {
       if (r < .93) { return rnd() < .5 ? [g() * .006, -1.12 + rnd() * 2.24, 0, .3 + rnd() * .3] : [-1.12 + rnd() * 2.24, -.18 + g() * .006, 0, .3 + rnd() * .3]; }
       const a = rnd() * Math.PI * 2, rr = .4 + rnd() * 1.6; return [Math.cos(a) * rr, Math.sin(a) * rr, g() * .3, rnd() * .35];
     }),
-    torus: () => fromPoints(i => {          // the ring, held in gold: banded torus
-      const u = rnd() * Math.PI * 2, v = rnd() * Math.PI * 2, R = 1, r = .2 + g() * .012;
-      const band = Math.sin(u * 9) > .55 ? 1 : 0;
-      return [(R + r * Math.cos(v)) * Math.cos(u), (R + r * Math.cos(v)) * Math.sin(u), r * Math.sin(v), band ? .95 : .35 + rnd() * .35];
+    // two rings, after the template's: a squarish profile (|cos|^.55) piles points onto the rims, which run white-hot; the body stays gold
+    torus: () => fromPoints(i => {          // the double ring: two thin bands that cross each other
+      const l = rnd() * Math.PI * 2, c = rnd() * Math.PI * 2, u = i % 2 ? 1 : -1;
+      const f = Math.sign(Math.cos(c)) * Math.abs(Math.cos(c)) ** .55, m = Math.sign(Math.sin(c)) * Math.abs(Math.sin(c)) ** .55;
+      const gr = 1 + .09 * f + g() * .003;
+      return [gr * Math.cos(l), gr * Math.sin(l), u * .3 * Math.sin(l + .4) + .12 * m, Math.abs(m) > .8 ? 1 : .45 + .15 * Math.abs(f)];
+    }),
+    cuff: () => fromPoints(i => {           // the band: one wide ring, lit rims, gold body
+      const l = rnd() * Math.PI * 2, c = rnd() * Math.PI * 2;
+      const f = Math.sign(Math.cos(c)) * Math.abs(Math.cos(c)) ** .55, m = Math.sign(Math.sin(c)) * Math.abs(Math.sin(c)) ** .55;
+      const gr = 1 + .085 * f + g() * .003;
+      return [gr * Math.cos(l), gr * Math.sin(l), .08 * Math.sin(l * 2) + .36 * m + g() * .004, Math.abs(m) > .78 ? 1 : .5 + .14 * Math.abs(f)];
     }),
     sphere: () => fromPoints(i => {         // skin assessment: a measured globe
       const r = rnd();
@@ -172,23 +180,30 @@ function start() {
   const geo = new THREE.BufferGeometry();
   const rndAttr = new Float32Array(N * 4); for (let i = 0; i < N * 4; i++) rndAttr[i] = rnd();
   geo.setAttribute('aRnd', new THREE.BufferAttribute(rndAttr, 4));
+  // the halo layer draws every 4th point again, big and soft, so dense regions glow like the template's bloom
+  const haloGeo = new THREE.BufferGeometry();
+  { const step = 4, idx = new Uint16Array(Math.floor(N / step)); for (let i = 0; i < idx.length; i++) idx[i] = i * step; haloGeo.setIndex(new THREE.BufferAttribute(idx, 1)); }
+  haloGeo.setAttribute('aRnd', geo.getAttribute('aRnd'));
   const bind = (from, to) => {
-    geo.setAttribute('position', from.pos); geo.setAttribute('aTo', to.pos);
-    geo.setAttribute('cFrom', from.col); geo.setAttribute('cTo', to.col);
+    for (const gm of [geo, haloGeo]) {
+      gm.setAttribute('position', from.pos); gm.setAttribute('aTo', to.pos);
+      gm.setAttribute('cFrom', from.col); gm.setAttribute('cTo', to.col);
+    }
   };
   bind(shapes.dust, shapes.dust);
   const U = {
     uMix: { value: 0 }, uScatter: { value: 0 }, uTime: { value: 0 }, uOpacity: { value: 0 }, uBirth: { value: 0 },
     uSize: { value: phone ? 2.1 : 2.4 }, uPR: { value: dpr }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uMouseStr: { value: 0 },
-    uTint: { value: new THREE.Color(1, 1, 1) }, uTintAmt: { value: 0 }, uGlint: { value: 1 }, uLight: { value: 0 },
+    uTint: { value: new THREE.Color(1, 1, 1) }, uTintAmt: { value: 0 }, uGlint: { value: 1 }, uLight: { value: 0 }, uHalo: { value: .4 },
   };
-  const mat = new THREE.ShaderMaterial({
-    uniforms: U, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+  const baseSize = phone ? 2.1 : 2.4;
+  const makeMat = halo => new THREE.ShaderMaterial({
+    uniforms: U, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, defines: halo ? { HALO: 1 } : {},
     vertexShader: `
       attribute vec3 aTo; attribute vec3 cFrom; attribute vec3 cTo; attribute vec4 aRnd;
-      uniform float uMix, uScatter, uTime, uSize, uPR, uBirth, uMouseStr, uTintAmt, uGlint, uLight;
+      uniform float uMix, uScatter, uTime, uSize, uPR, uBirth, uMouseStr, uTintAmt, uGlint, uLight, uHalo;
       uniform vec3 uMouse, uTint;
-      varying vec3 vCol; varying float vA;
+      varying vec3 vCol; varying float vA; varying float vGlint;
       void main(){
         float m = clamp((uMix - aRnd.x * .3) / .7, 0., 1.); m = m * m * (3. - 2. * m);
         vec3 p = mix(position, aTo, m);
@@ -201,23 +216,40 @@ function start() {
         wp.xy += normalize(d + 1e-5) * uMouseStr * smoothstep(.6, 0., dl) * (.25 + aRnd.y * .25);
         vec4 mv = viewMatrix * wp;
         gl_Position = projectionMatrix * mv;
-        float glint = step(.986, aRnd.z) * uGlint;
+        float glint = step(.994, aRnd.z) * uGlint;
         float tw = .65 + .35 * sin(uTime * (1.5 + aRnd.w * 3.) + aRnd.x * 60.);
-        gl_PointSize = uSize * (.55 + aRnd.y * .9) * (1. + glint * 3.2 * tw) * uPR * (6. / -mv.z);
         vec3 col = mix(cFrom, cTo, m);
         col = mix(col, col * uTint, uTintAmt);
         float sweep = uLight * smoothstep(.35, 0., abs(wp.x - (fract(uTime * .08) * 6. - 3.)));
-        vCol = col * (1. + glint * 1.6 * tw + sweep * 1.4);
-        vA = (.42 + .45 * aRnd.w) * (1. - sc * .12);
+        #ifdef HALO
+          gl_PointSize = uSize * (6. + aRnd.y * 7.) * uPR * (6. / -mv.z);
+          vCol = col * vec3(1., .88, .66) * (1. + sweep * .8);
+          vA = .034 * uHalo * (1. - sc * .25);
+          vGlint = 0.;
+        #else
+          gl_PointSize = uSize * (.55 + aRnd.y * .9) * (1. + glint * 2.1 * tw) * uPR * (6. / -mv.z);
+          vCol = col * (1. + glint * 1.2 * tw + sweep * 1.4);
+          vA = (.42 + .45 * aRnd.w) * (1. - sc * .12);
+          vGlint = glint * smoothstep(.8, 1.1, uHalo);
+        #endif
       }`,
     fragmentShader: `
-      uniform float uOpacity; varying vec3 vCol; varying float vA;
-      void main(){ vec2 c = gl_PointCoord - .5; float d = length(c); float a = smoothstep(.5, .0, d); a *= a;
+      uniform float uOpacity; varying vec3 vCol; varying float vA; varying float vGlint;
+      void main(){ vec2 c = gl_PointCoord - .5; float d = length(c);
+        #ifdef HALO
+          float a = smoothstep(.5, 0., d); a = a * a * a;
+        #else
+          float a = smoothstep(.5, .0, d); a *= a;
+          float sq = smoothstep(.5, .2, max(abs(c.x), abs(c.y)));   // on the rings the glints are the template's square bokeh
+          a = mix(a, sq, vGlint);
+        #endif
         gl_FragColor = vec4(vCol * a * vA * uOpacity, 1.); }`,
   });
-  mat.blending = THREE.CustomBlending; mat.blendEquation = THREE.AddEquation; mat.blendSrc = THREE.OneFactor; mat.blendDst = THREE.OneFactor;
+  const mat = makeMat(false), haloMat = makeMat(true);
+  for (const m of [mat, haloMat]) { m.blending = THREE.CustomBlending; m.blendEquation = THREE.AddEquation; m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneFactor; }
   const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.renderOrder = 1;
-  const group = new THREE.Group(); group.add(pts); scene.add(group);
+  const halo = new THREE.Points(haloGeo, haloMat); halo.frustumCulled = false; halo.renderOrder = 0;
+  const group = new THREE.Group(); group.add(halo); group.add(pts); scene.add(group);
 
   /* ---------- anchors (timeline) ---------- */
   const num = (el, k, d) => { const v = el.dataset[k]; return v === undefined || v === '' ? d : +v; };
@@ -225,6 +257,7 @@ function start() {
     el, shape: el.dataset.pt, x: num(el, 'ptX', 0), xm: num(el, 'ptXm', 0), y: num(el, 'ptY', 0), ym: num(el, 'ptYm', num(el, 'ptY', 0)),
     s: num(el, 'ptS', 1), sm: num(el, 'ptSm', num(el, 'ptS', 1)), rx: num(el, 'ptRx', 0), ry: num(el, 'ptRy', 0), spin: num(el, 'ptSpin', 0),
     op: num(el, 'ptOp', 1), light: num(el, 'ptLight', 0), inter: el.hasAttribute('data-pt-interactive'), f0: 0, f1: 0, rot: 0,
+    orbit: num(el, 'ptOrbit', 0), tilt: num(el, 'ptTilt', 0), glow: num(el, 'ptGlow', .4), size: num(el, 'ptSize', 1),
   }));
   let vh = innerHeight;
   const layout = () => {
@@ -248,19 +281,19 @@ function start() {
     const L = anchors.length; if (!L) return null;
     const gap = vh * .8;
     for (let i = 0; i < L; i++) { const a = anchors[i];
-      if (y >= a.f0 && y <= a.f1) return { a, b: a, t: 0, sc: 0, op: a.op, lp: (y - a.f0) / Math.max(1, a.f1 - a.f0) };
+      if (y >= a.f0 && y <= a.f1) { const lp = (y - a.f0) / Math.max(1, a.f1 - a.f0); return { a, b: a, t: 0, sc: 0, op: a.op, lp, la: lp, lb: lp }; }
       const n = anchors[i + 1];
       if (n && y > a.f1 && y < n.f0) {
         const span = n.f0 - a.f1;
-        if (span <= gap * 2) { const t = (y - a.f1) / span; return { a, b: n, t, sc: Math.sin(Math.PI * t) * 1.35, op: a.op + (n.op - a.op) * t }; }
-        if (y - a.f1 < gap) { const t = (y - a.f1) / gap; return { a, b: a, t: 0, sc: t * 2.4, op: a.op * (1 - t) }; }
-        if (n.f0 - y < gap) { const t = 1 - (n.f0 - y) / gap; return { a: n, b: n, t: 0, sc: (1 - t) * 2.4, op: n.op * t }; }
-        return { a, b: a, t: 0, sc: 3, op: 0 };
+        if (span <= gap * 2) { const t = (y - a.f1) / span; return { a, b: n, t, sc: Math.sin(Math.PI * t) * 1.35, op: a.op + (n.op - a.op) * t, la: 1, lb: 0 }; }
+        if (y - a.f1 < gap) { const t = (y - a.f1) / gap; return { a, b: a, t: 0, sc: t * 2.4, op: a.op * (1 - t), la: 1, lb: 1 }; }
+        if (n.f0 - y < gap) { const t = 1 - (n.f0 - y) / gap; return { a: n, b: n, t: 0, sc: (1 - t) * 2.4, op: n.op * t, la: 0, lb: 0 }; }
+        return { a, b: a, t: 0, sc: 3, op: 0, la: 1, lb: 1 };
       }
     }
     const f = anchors[0], l = anchors[L - 1];
-    if (y < f.f0) { const t = Math.max(0, 1 - (f.f0 - y) / gap); return { a: f, b: f, t: 0, sc: (1 - t) * 2.4, op: f.op * t }; }
-    const t = Math.max(0, 1 - (y - l.f1) / gap); return { a: l, b: l, t: 0, sc: (1 - t) * 2.4, op: l.op * t };
+    if (y < f.f0) { const t = Math.max(0, 1 - (f.f0 - y) / gap); return { a: f, b: f, t: 0, sc: (1 - t) * 2.4, op: f.op * t, la: 0, lb: 0 }; }
+    const t = Math.max(0, 1 - (y - l.f1) / gap); return { a: l, b: l, t: 0, sc: (1 - t) * 2.4, op: l.op * t, la: 1, lb: 1 };
   }
 
   const resize = () => { renderer.setSize(innerWidth, innerHeight, false); renderer.getDrawingBufferSize(bgMat.uniforms.uRes.value); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); layout(); dirty = true; };
@@ -283,7 +316,7 @@ function start() {
     const key = st.a.shape + '>' + st.b.shape + (A ? 1 : 0) + (B ? 1 : 0);
     if (key !== pairKey) { bind(sa, sb); pairKey = key; preloadNear(y); }
     const op = st.op * (born ? Math.min(1, (now - born) / 600) : 0);
-    if (op <= .002 && cur.op <= .002) { if (!sleeping || dirty) { pts.visible = false; renderer.render(scene, camera); pts.visible = true; sleeping = true; dirty = false; } cur.op = 0; return; }
+    if (op <= .002 && cur.op <= .002) { if (!sleeping || dirty) { group.visible = false; renderer.render(scene, camera); group.visible = true; sleeping = true; dirty = false; } cur.op = 0; return; }
     sleeping = false; dirty = false;
     const e = st.t * st.t * (3 - 2 * st.t);
     const W = worldW(), H = worldH(), ph = innerWidth < 768;
@@ -296,13 +329,17 @@ function start() {
     // round shapes turn all the way; flat ones (ring study, wordmark, sculptures) sway so they never go edge-on; the torus rolls on its own axis
     const TAU = Math.PI * 2;
     st.a.rot = (st.a.rot + dt * st.a.spin) % TAU; if (st.b !== st.a) st.b.rot = (st.b.rot + dt * st.b.spin) % TAU;
-    const yaw = a => a.ry + (FULL[a.shape] ? a.rot : Math.sin(a.rot) * .45), roll = a => a.shape === 'torus' ? a.rot : 0;
-    let dr = yaw(st.b) - yaw(st.a); dr -= Math.round(dr / TAU) * TAU;
+    // orbit + tilt are scrubbed by scroll (la / lb = progress through the anchor's own window), like the template's rings
+    const ez = l => l * l * (3 - 2 * l);
+    const yaw = (a, l) => a.ry + a.orbit * TAU * l + (FULL[a.shape] ? a.rot : Math.sin(a.rot) * .45), roll = a => a.shape === 'torus' ? a.rot : 0;
+    const pitch = (a, l) => a.rx + a.tilt * ez(l);
+    let dr = yaw(st.b, st.lb) - yaw(st.a, st.la); dr -= Math.round(dr / TAU) * TAU;
     let dz = roll(st.b) - roll(st.a); dz -= Math.round(dz / TAU) * TAU;
-    const ry = yaw(st.a) + dr * e, rz = roll(st.a) + dz * e;
+    const ry = yaw(st.a, st.la) + dr * e, rz = roll(st.a) + dz * e;
+    const rx = pitch(st.a, st.la) + (pitch(st.b, st.lb) - pitch(st.a, st.la)) * e;
     const inter = (st.a.inter && st.t === 0) ? 1 : 0;
     mouse.x += (mouse.tx - mouse.x) * .06; mouse.y += (mouse.ty - mouse.y) * .06;
-    group.rotation.set(st.a.rx + (st.b.rx - st.a.rx) * e + (inter ? -mouse.y * .5 : mouse.y * .05),
+    group.rotation.set(rx + (inter ? -mouse.y * .5 : mouse.y * .05),
                        ry + (inter ? mouse.x * .8 : mouse.x * .08), rz);
     U.uMix.value = st.a === st.b ? 0 : e;
     cur.op += (op - cur.op) * .2; cur.sc += (st.sc - cur.sc) * .18;
@@ -310,6 +347,8 @@ function start() {
     const dens = (an, s) => { if (!s.fill) return 1; const px = fit(an, s) * innerHeight / H; return Math.min(1, ((px / 300) ** 2 / (N / 52000)) ** .7); };
     const da = dens(st.a, sa), dim = da + (dens(st.b, sb) - da) * e;
     U.uOpacity.value = cur.op * dim; U.uScatter.value = cur.sc;
+    U.uSize.value = baseSize * (st.a.size + (st.b.size - st.a.size) * e);
+    U.uHalo.value = st.a.glow + (st.b.glow - st.a.glow) * e;
     U.uTime.value = (now - t0) / 1000;
     U.uBirth.value = born ? Math.min(1, (now - born) / 2400) ** .6 : 0;
     U.uLight.value = st.a.light + (st.b.light - st.a.light) * e;

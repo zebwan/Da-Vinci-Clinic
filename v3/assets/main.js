@@ -5,6 +5,7 @@
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const smooth = t => t * t * (3 - 2 * t);
+  root.classList.add('js');
   if (reduced) root.classList.add('reduced-motion');
 
   /* ---------- smooth scroll (Lenis on the window, as on the template) ---------- */
@@ -44,13 +45,16 @@
 
   /* ---------- reveals ---------- */
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
-  $$('.rv, [data-reveal]').forEach(el => io.observe(el));
+  $$('.rv, [data-reveal], .card__media').forEach(el => io.observe(el));
 
   /* ---------- scroll-linked sections ---------- */
   const heroes = $$('.hero, .phero');
   const manifestos = $$('[data-words]');
   const stripes = $$('[data-stripes]');
   const takeovers = $$('[data-takeover]');
+  const cuffs = $$('[data-cuff]');
+  const orbits = $$('[data-orbit]');
+  const studies = $$('[data-study]');
   const chapters = $$('[data-chapter]');
   const scenes = $$('[data-scenes]');
   const heritage = $$('[data-heritage]');
@@ -69,7 +73,7 @@
     lastY = y;
     heroes.forEach(h => {
       const p = prog(h), copy = $('[data-hero-copy]', h) || $('.phero__copy', h), hint = $('[data-hero-hint]', h), ring = $('[data-hero-ring]', h);
-      if (copy) { const o = h.classList.contains('hero') ? 1 - smooth(clamp(p / .2)) : 1 - smooth(clamp((p - .35) / .45)); copy.style.opacity = o; copy.style.transform = `translateY(${(1 - o) * -30}px)`; copy.style.filter = o < .99 ? `blur(${(1 - o) * 6}px)` : ''; }
+      if (copy) { const o = h.classList.contains('hero') ? 1 - smooth(clamp(p / .2)) : 1 - smooth(clamp((p - .35) / .45)); copy.style.opacity = o; copy.style.transform = `translateY(${(1 - o) * -30}px) scale(${1 + (1 - o) * .22})`; copy.style.filter = o < .99 ? `blur(${(1 - o) * 6}px)` : ''; }
       if (hint) hint.style.opacity = 1 - clamp(p / .08);
       if (ring) { const o = smooth(clamp((p - .6) / .14)) * (1 - smooth(clamp((p - .93) / .07))); ring.style.opacity = o; }
     });
@@ -83,6 +87,22 @@
       const p = prog(t), open = smooth(clamp(p / .55)), cap = smooth(clamp((p - .5) / .2)) * (1 - smooth(clamp((p - .92) / .08)));
       t.style.setProperty('--cy', `${(1 - open) * 18}%`); t.style.setProperty('--cx', `${(1 - open) * (innerWidth < 768 ? 10 : 26)}%`);
       t.style.setProperty('--sc', (1.14 - open * .14).toFixed(3)); t.style.setProperty('--cap', cap.toFixed(3));
+    });
+    cuffs.forEach(c => { const p = prog(c); c.style.setProperty('--c', (smooth(clamp((p - .06) / .2)) * (1 - smooth(clamp((p - .86) / .12)))).toFixed(3)); });
+    orbits.forEach(o => {
+      const p = prog(o), ring = o._ring || (o._ring = $('[data-orbit-ring]', o)), cards = o._cards || (o._cards = $$('.ocard', o)), caps = o._caps || (o._caps = $$('.orbit__cap', o)), dots = o._dots || (o._dots = $$('.orbit__dots span', o));
+      const n = cards.length, intro = smooth(clamp(p / .14)), outro = smooth(clamp((p - .9) / .1)), q = clamp((p - .14) / .72);
+      const ry = 30 * (1 - intro) - q * (n - 1) / n * 360;
+      ring.style.setProperty('--ry', ry.toFixed(2) + 'deg'); ring.style.setProperty('--s', (.7 + .3 * intro - .15 * outro).toFixed(3)); ring.style.setProperty('--o', (intro * (1 - .6 * outro)).toFixed(3));
+      cards.forEach((c, i) => { const f = Math.cos((i * 360 / n + ry) * Math.PI / 180); c.style.setProperty('--f', (.4 + .6 * clamp(f + .25)).toFixed(3)); c.style.setProperty('--b', (.72 + .4 * clamp(f)).toFixed(3)); });
+      const i = Math.min(n - 1, Math.round(q * (n - 1)));
+      caps.forEach((c, k) => c.classList.toggle('on', k === i)); dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    });
+    studies.forEach(s => {
+      const p = prog(s), q = clamp((p - .08) / .66), tags = s._tags || (s._tags = $$('.study__tag', s)), steps = s._steps || (s._steps = $$('.study__steps li', s));
+      s.style.setProperty('--q', q.toFixed(4)); s.style.setProperty('--l', q > 0 && q < 1 ? '1' : '0'); s.style.setProperty('--z', p > .82 ? '1.04' : '1');
+      tags.forEach((t, i) => t.classList.toggle('on', q > .2 + i * .17));
+      steps.forEach((li, i) => li.classList.toggle('on', p > i * (.78 / steps.length) + .04 && (p < (i + 1) * (.78 / steps.length) + .04 || i === steps.length - 1)));
     });
     chapters.forEach(c => {
       const p = prog(c), items = c._it || (c._it = $$('.chapter__item', c)), i = Math.min(items.length - 1, Math.floor(p * items.length * .999));
@@ -118,6 +138,16 @@
       panels.forEach(p => p.classList.toggle('on', p.dataset.panel === b.dataset.variant));
       dispatchEvent(new CustomEvent('pt:tint', { detail: b.dataset.variant === '0' ? null : { color: b.dataset.tint, amt: .8 } }));
     }));
+  });
+
+  /* ---------- face map: a point on the portrait opens its treatment family; cycles on its own ---------- */
+  $$('[data-fmap]').forEach(m => {
+    const pins = $$('.fpin', m), cards = $$('.fcard', m); let i = 0, timer;
+    const go = n => { i = n; pins.forEach((p, k) => p.classList.toggle('on', k === i)); cards.forEach((c, k) => c.classList.toggle('on', k === i)); };
+    const auto = () => { clearInterval(timer); if (!reduced) timer = setInterval(() => go((i + 1) % pins.length), 4500); };
+    pins.forEach((p, k) => { p.addEventListener('click', () => { go(k); auto(); }); p.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { go(k); auto(); } }); });
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { m.classList.add('in'); auto(); } else clearInterval(timer); }), { threshold: .3 }).observe(m);
+    go(0);
   });
 
   /* ---------- FAQ accordion ---------- */
