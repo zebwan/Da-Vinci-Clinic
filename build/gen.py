@@ -350,6 +350,9 @@ def main():
     # design 2 (Heron template, built separately in ../05-build-heron) is published alongside at /v2/
     v2 = os.path.join(os.path.dirname(ROOT), '05-build-heron', 'site')
     if os.path.isdir(v2): shutil.copytree(v2, os.path.join(OUT, 'v2'))
+    # design 3 (Tigris template, particle build in ../07-build-tigris) at /v3/
+    v3 = os.path.join(os.path.dirname(ROOT), '07-build-tigris', 'site')
+    if os.path.isdir(v3): shutil.copytree(v3, os.path.join(OUT, 'v3'))
     # mirror for the preview server
     os.makedirs(MIRROR, exist_ok=True)
     os.system(f'rsync -a --delete "{OUT}/" "{MIRROR}/"')
