@@ -338,7 +338,7 @@ def main():
     fav = os.path.join(OUT, 'assets/img/favicon.png')
     if not os.path.exists(fav):
         from PIL import Image
-        Image.open('/Users/mysense/Desktop/Da Vinci Clinic Revamp/00-current-site/images/uploads/2023/12/logo.png').convert('RGBA').resize((64, 64)).save(fav)
+        Image.open(os.path.join(os.path.dirname(ROOT), '00-current-site/images/uploads/2023/12/logo.png')).convert('RGBA').resize((64, 64)).save(fav)
     n = 0
     for p in PAGES:
         render(p); n += 1
@@ -347,6 +347,9 @@ def main():
     open(os.path.join(OUT, 'sitemap.xml'), 'w').write(f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
     open(os.path.join(OUT, 'robots.txt'), 'w').write(f'User-agent: *\nAllow: /\nSitemap: {SITE["url"]}/sitemap.xml\n')
     open(os.path.join(OUT, '.nojekyll'), 'w').write('')
+    # design 2 (Heron template, built separately in ../05-build-heron) is published alongside at /v2/
+    v2 = os.path.join(os.path.dirname(ROOT), '05-build-heron', 'site')
+    if os.path.isdir(v2): shutil.copytree(v2, os.path.join(OUT, 'v2'))
     # mirror for the preview server
     os.makedirs(MIRROR, exist_ok=True)
     os.system(f'rsync -a --delete "{OUT}/" "{MIRROR}/"')

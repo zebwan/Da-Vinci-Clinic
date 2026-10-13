@@ -2,7 +2,7 @@
 """Prepare Da Vinci images for the Helora slots: crops to slot ratios at 2x, webp output, hero cut-out via rembg, gradient hero bg, logo variants."""
 from PIL import Image, ImageOps, ImageDraw, ImageFilter
 import os, sys, io
-SRC='/Users/mysense/Desktop/Da Vinci Clinic Revamp/00-current-site/images/uploads/'
+SRC='/Users/mysense/Desktop/Website Works/Da Vinci Clinic Revamp/00-current-site/images/uploads/'
 OUT='assets/img/'
 os.makedirs(OUT, exist_ok=True)
 def load(p):

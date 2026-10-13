@@ -3,7 +3,7 @@
 Originals live in 02-plan/generated/video/. The last frame repeats the first, so it is dropped to keep the loop seamless."""
 import os, subprocess, sys
 
-SRC = '/Users/mysense/Desktop/Da Vinci Clinic Revamp/02-plan/generated/video/'
+SRC = '/Users/mysense/Desktop/Website Works/Da Vinci Clinic Revamp/02-plan/generated/video/'
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets/video/')
 JOBS = [  # (original, web name, width, height)
     ('hero-wide-v2-kling.mp4', 'hero-wide', 1920, 1080),

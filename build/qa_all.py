@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Run structural QA on every page at the given widths; print only problems; save full-page tiled screenshots."""
 import sys, os, time, json, base64, io
-sys.path.insert(0, '/Users/mysense/Desktop/Da Vinci Clinic Revamp/01-template-helora/raw')
+sys.path.insert(0, '/Users/mysense/Desktop/Website Works/Da Vinci Clinic Revamp/01-template-helora/raw')
 from cdp import Chrome
 from PIL import Image
-ROOT='/Users/mysense/Desktop/Da Vinci Clinic Revamp/03-build'; os.chdir(ROOT); os.makedirs('qa', exist_ok=True)
+ROOT='/Users/mysense/Desktop/Website Works/Da Vinci Clinic Revamp/03-build'; os.chdir(ROOT); os.makedirs('qa', exist_ok=True)
 sys.path.insert(0, 'build'); from content import PAGES
 widths=[int(x) for x in sys.argv[1:]] or [1440, 390]
 c = Chrome(1440, 900); c.cmd("Page.bringToFront"); c.cmd("Emulation.setFocusEmulationEnabled", {"enabled": True}); c.watch(); c.cmd("Network.setCacheDisabled", {"cacheDisabled": True})

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """QA capture of a built page at 1440/810/390: full-page screenshot, console errors, overflow, section outline."""
 import sys, os, time, json
-sys.path.insert(0, '/Users/mysense/Desktop/Da Vinci Clinic Revamp/01-template-helora/raw')
+sys.path.insert(0, '/Users/mysense/Desktop/Website Works/Da Vinci Clinic Revamp/01-template-helora/raw')
 from cdp import Chrome
-ROOT='/Users/mysense/Desktop/Da Vinci Clinic Revamp/03-build'; os.chdir(ROOT); os.makedirs('qa', exist_ok=True)
+ROOT='/Users/mysense/Desktop/Website Works/Da Vinci Clinic Revamp/03-build'; os.chdir(ROOT); os.makedirs('qa', exist_ok=True)
 route = sys.argv[1] if len(sys.argv) > 1 else '/'
 slug = route.strip('/').replace('/', '_') or 'home'
 widths = [int(x) for x in sys.argv[2:]] or [1440, 810, 390]

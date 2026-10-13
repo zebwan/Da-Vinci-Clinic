@@ -4,7 +4,7 @@ matching treatment slots. Run: python3 build/prep_art.py"""
 import os
 from PIL import Image, ImageOps
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); os.chdir(ROOT)
-SRC = '/Users/mysense/Desktop/Da Vinci Clinic Revamp/00-current-site/images/uploads/'
+SRC = '/Users/mysense/Desktop/Website Works/Da Vinci Clinic Revamp/00-current-site/images/uploads/'
 OUT = 'assets/img/'
 
 def crop(name, src, w, h, cx=.5, cy=.5, q=82):
