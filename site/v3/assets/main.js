@@ -180,75 +180,82 @@
   $$('[data-sfilm]').forEach(sf => {
     const n = +sf.dataset.n, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d', { alpha: false }), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
     const pick = () => (innerWidth < 768 && innerHeight > innerWidth ? 'm' : 'd');
-    const WIN = 36, CAP = 96, PAR = 8;
-    let set = pick(), imgs = [], loaded, bmps, bmpN = 0, pending, tries, gen = 0, cur = -1, drawn = -1, visible = false, raf = 0, aim = 0, queue = [], inflight = 0;
+    const WIN = 40, PAR = 8;
+    // Frames arrive as Blobs (fetch) and are decoded with createImageBitmap(blob), which decodes off the main thread, so
+    // neither loading nor decoding can stall a scroll frame. Only a window of frames around the reader is kept decoded
+    // (GPU bitmaps); the rest stay as small compressed blobs until the reader gets near.
+    let set = pick(), blobs, bmps, pending, tries, gen = 0, cur = 0, shown = -1, visible = false, raf = 0, aim = 0, queue = [], inflight = 0;
     const src = i => `${sf.dataset.base}${set}/${String(i + 1).padStart(4, '0')}.webp`;
-    const reset = () => { imgs = new Array(n); loaded = new Uint8Array(n); bmps = new Array(n); bmpN = 0; pending = new Uint8Array(n); tries = new Uint8Array(n); queue = []; inflight = 0; drawn = -1; gen++; };
+    const reset = () => { if (bmps) bmps.forEach(b => b && b.close && b.close()); blobs = new Array(n); bmps = new Array(n); pending = new Uint8Array(n); tries = new Uint8Array(n); queue = []; inflight = 0; shown = -1; gen++; };
     reset();
     // fetch order: the frame under the reader first, then outward, then a coarse-to-fine sweep of everything else
     const order = () => { const o = [], seen = new Uint8Array(n); for (let s = 32; s >= 1; s >>= 1) for (let i = 0; i < n; i += s) if (!seen[i]) { seen[i] = 1; o.push(i); } return o; };
     const nextToFetch = () => {
-      for (let d = 0; d <= 24; d++) for (const i of (d ? [aim + d, aim - d] : [aim])) if (i >= 0 && i < n && !loaded[i] && !pending[i]) return i;
-      while (queue.length) { const i = queue.shift(); if (!loaded[i] && !pending[i]) return i; }
+      for (let d = 0; d <= 24; d++) for (const i of (d ? [aim + d, aim - d] : [aim])) if (i >= 0 && i < n && !blobs[i] && !pending[i]) return i;
+      while (queue.length) { const i = queue.shift(); if (!blobs[i] && !pending[i]) return i; }
       return -1;
     };
     const pump = () => {
       const g = gen;
       while (inflight < PAR) {
         const i = nextToFetch(); if (i < 0) return;
-        pending[i] = 1; inflight++; const im = new Image(); im.decoding = 'async';
-        im.onload = () => { if (g !== gen) return; loaded[i] = 1; imgs[i] = im; inflight--; warm(); pump(); };
-        im.onerror = () => { if (g !== gen) return; inflight--; if (++tries[i] < 3) setTimeout(() => { if (g === gen) { pending[i] = 0; pump(); } }, 1500 * tries[i]); else pump(); };   // a frame that fails three times is left out; the nearest loaded one stands in
-        im.src = src(i);
+        pending[i] = 1; inflight++;
+        fetch(src(i)).then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); }).then(bl => { if (g !== gen) return; blobs[i] = bl; inflight--; if (Math.abs(i - cur) <= WIN) warm(); pump(); },
+          () => { if (g !== gen) return; inflight--; if (++tries[i] < 3) setTimeout(() => { if (g === gen) { pending[i] = 0; pump(); } }, 1500 * tries[i]); else pump(); });   // a frame that fails three times is left out; the nearest one stands in
       }
     };
     let started = false;
     const load = () => { if (started) return; started = true; queue = order(); pump(); };
-    // decoded window: bitmaps for ±WIN frames around the current one; anything further out is released
     const warm = () => {
       const g = gen, lo = Math.max(0, cur - WIN), hi = Math.min(n - 1, cur + WIN);
       for (let d = 0; d <= WIN; d++) for (const i of (d ? [cur + d, cur - d] : [cur])) {
-        if (i < lo || i > hi || !loaded[i] || bmps[i]) continue;
-        bmps[i] = 'making'; bmpN++;
-        createImageBitmap(imgs[i]).then(b => { if (g !== gen) { b.close(); return; } bmps[i] = b; if (i === cur && drawn !== i) draw(i); }, () => { bmps[i] = null; bmpN--; });
+        if (i < lo || i > hi || !blobs[i] || bmps[i]) continue;
+        bmps[i] = 'making';
+        createImageBitmap(blobs[i]).then(bm => { if (g !== gen || bmps[i] !== 'making') { bm.close(); return; } bmps[i] = bm; if (Math.abs(i - cur) <= 1) shown = -1; }, () => { bmps[i] = null; });
       }
-      if (bmpN > CAP) for (let i = 0; i < n; i++) if (bmps[i] && typeof bmps[i] !== 'string' && (i < lo - WIN || i > hi + WIN)) { bmps[i].close(); bmps[i] = null; bmpN--; }
+      for (let i = 0; i < n; i++) if (bmps[i] && (i < lo - 8 || i > hi + 8)) { if (bmps[i].close) bmps[i].close(); bmps[i] = null; }   // release what fell out of the window
     };
-    const nearest = i => { if (loaded[i]) return i; for (let d = 1; d < n; d++) { if (i - d >= 0 && loaded[i - d]) return i - d; if (i + d < n && loaded[i + d]) return i + d; } return -1; };
+    const ready = i => i >= 0 && i < n && bmps[i] && typeof bmps[i] !== 'string';
+    const nearest = i => { if (ready(i)) return i; for (let d = 1; d < n; d++) { if (ready(i - d)) return i - d; if (ready(i + d)) return i + d; if (i - d < 0 && i + d >= n) break; } return -1; };
     const size = () => {     // canvas at source resolution (never above it): a draw is then a plain blit, even on Retina
       const r = cv.getBoundingClientRect(), [sw, sh] = (set === 'm' ? sf.dataset.mratio : sf.dataset.ratio).split('x').map(Number);
       const dpr = Math.min(devicePixelRatio || 1, 2, Math.max(sw / Math.max(1, r.width), sh / Math.max(1, r.height), .75));
-      cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr)); drawn = -1;
+      cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr)); shown = -1;
     };
-    const scenes = (sf.dataset.scenes || '').split(',').filter(Boolean).map(Number), XF = 14;   // frames of crossfade either side of a scene start
-    const blit = (im, alpha) => {
-      const W = cv.width, H = cv.height, iw = im.width, ih = im.height; ctx.globalAlpha = alpha;
-      if (set === 'm') { const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s, x = (W - w) / 2, y = Math.max(0, H * .4 - h / 2); ctx.drawImage(im, x, y, w, h); }
-      else { const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
-      ctx.globalAlpha = 1;
-    };
-    const frameOf = i => (bmps[i] && typeof bmps[i] !== 'string') ? bmps[i] : imgs[i];
-    const draw = i => {
-      const im = frameOf(i); if (!im) return;
+    const scenes = (sf.dataset.scenes || '').split(',').filter(Boolean).map(Number), XF = 14;   // frames of crossfade at the start of each new scene
+    const frameOf = i => ready(i) ? bmps[i] : null;
+    const rect = im => {
       const W = cv.width, H = cv.height, iw = im.width, ih = im.height;
-      // crossing a scene boundary: hold the last frame of the previous scene under the new one and fade it out
-      const sc = scenes.find(s0 => i >= s0 && i < s0 + XF);
-      if (sc !== undefined && set === 'd') { const prev = nearest(sc - 1), pim = prev >= 0 ? frameOf(prev) : null;
-        if (pim) { blit(pim, 1); blit(im, (i - sc + 1) / XF); drawn = i; sf.classList.add('is-ready'); return; } }
+      if (set === 'm') { const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s; return [(W - w) / 2, Math.max(0, H * .4 - h / 2), w, h]; }
+      const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; return [(W - w) / 2, (H - h) / 2, w, h];
+    };
+    const put = (im, a) => { if (!im || a <= .002) return; const [x, y, w, h] = rect(im); ctx.globalAlpha = Math.min(1, a); ctx.drawImage(im, x, y, w, h); ctx.globalAlpha = 1; };
+    // The film is drawn at a FRACTIONAL frame position: frame A, with frame A+1 laid over it at the fraction we are between
+    // them (pear.no blends two textures the same way). Without this, a slow scroll holds one frame for several screen
+    // refreshes and then jumps, which reads as stutter however fast the frames load.
+    const draw = pos => {
+      const A = Math.floor(pos); let t = pos - A, ia = frameOf(A);
+      if (!ia) { const k = nearest(A); if (k < 0) return; ia = frameOf(k); t = 0; }
+      const ib = t > .004 ? frameOf(A + 1) : null, W = cv.width, H = cv.height;
+      if (set === 'm') { ctx.fillStyle = '#06111f'; ctx.fillRect(0, 0, W, H); }
+      const sc = scenes.find(s0 => pos >= s0 - 1 && pos < s0 + XF);
+      if (sc !== undefined) { const x = clamp((pos - sc + 1) / XF); put(frameOf(nearest(sc - 1)), 1); put(ia, x); put(ib, x * t); }   // a new scene fades in over the last frame of the previous one
+      else { put(ia, 1); put(ib, t); }
       if (set === 'm') {     // phones: the 4:5 film fills the width, sits in the upper part, and feathers into the navy above and below
-        const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s, x = (W - w) / 2, y = Math.max(0, H * .4 - h / 2), f = h * .14;
-        ctx.fillStyle = '#06111f'; ctx.fillRect(0, 0, W, H); ctx.drawImage(im, x, y, w, h);
+        const [, y, , h] = rect(ia), f = h * .14;
         const top = ctx.createLinearGradient(0, y, 0, y + f); top.addColorStop(0, '#06111f'); top.addColorStop(1, 'rgba(6,17,31,0)'); ctx.fillStyle = top; ctx.fillRect(0, y, W, f);
         const bot = ctx.createLinearGradient(0, y + h - f * 1.4, 0, y + h); bot.addColorStop(0, 'rgba(6,17,31,0)'); bot.addColorStop(1, '#06111f'); ctx.fillStyle = bot; ctx.fillRect(0, y + h - f * 1.4, W, f * 1.4 + 1);
-      } else { const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
-      drawn = i; sf.classList.add('is-ready');
+      }
+      shown = pos; sf.classList.add('is-ready');
     };
     const hand = $('.sfilm__hand', sf);
     const loop = () => {
-      raf = 0; const r = sf.getBoundingClientRect(), p = clamp(-r.top / Math.max(1, r.height - innerHeight));
-      const f = Math.round(p * (n - 1));      // direct: the scroll is already smoothed by Lenis; a second easing only adds lag
+      // progress from Lenis's own (fractional) scroll value: the page's scrollY is rounded to whole pixels, so at a slow scroll
+      // it moves on some display frames and not others; the animated value moves on every one
+      raf = 0; const r = sf.getBoundingClientRect(), y = lenis ? lenis.animatedScroll : scrollY, top = r.top + scrollY;
+      const p = clamp((y - top) / Math.max(1, r.height - innerHeight)), pos = p * (n - 1), f = Math.round(pos);      // direct: the scroll is already smoothed by Lenis; a second easing only adds lag
       if (f !== cur) { cur = f; aim = f; warm(); }
-      const i = nearest(cur); if (i >= 0 && i !== drawn) draw(i);
+      if (Math.abs(pos - shown) > .002) draw(pos);
       chs.forEach(c => c.classList.toggle('on', p >= +c.dataset.from && p <= +c.dataset.to));
       bar.style.transform = `scaleX(${p.toFixed(4)})`; sf.style.setProperty('--p', p.toFixed(4));
       if (hand) sf.style.setProperty('--hand', smooth(clamp((p - +hand.dataset.from) / Math.max(.001, +hand.dataset.to - +hand.dataset.from))).toFixed(3));
@@ -257,6 +264,7 @@
     new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) load(); }), { rootMargin: '250% 0px' }).observe(sf);
     new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (visible && !raf) { size(); raf = requestAnimationFrame(loop); } }), { rootMargin: '10% 0px' }).observe(sf);
     addEventListener('resize', () => { const s2 = pick(); if (s2 !== set) { set = s2; reset(); started = false; if (visible) load(); } size(); });
+    // the first frame paints from the poster <img> until the decoded film is ready
   });
 
   /* ---------- face map: a point on the portrait opens its treatment family; cycles on its own ---------- */
