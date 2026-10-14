@@ -152,6 +152,53 @@ em{font-style:italic;color:var(--gold-hi)}
 .sfilm__bar{position:absolute;left:var(--pad);right:var(--pad);bottom:clamp(1.1rem,3svh,1.6rem);height:1px;background:rgba(242,234,219,.16);z-index:2}
 .sfilm__bar span{position:absolute;inset:0;background:var(--gold);transform:scaleX(var(--p,0));transform-origin:left}
 
+/* ---------- 3a face study (from design 2): pinned, words → face → steps → proportion lines → markers → panel ---------- */
+.pmap{position:relative;height:600svh}
+.pmap__stage{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;grid-template-columns:1fr 0fr}
+.pmap__draw{position:relative;overflow:hidden;min-width:0}
+.pmap__words{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.pmap__words div{position:absolute;font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,5.6vw,5.4rem);line-height:1.04;color:var(--cream);text-align:center;padding:0 var(--pad);opacity:0}
+.pmap__fig{position:absolute;left:50%;top:53%;height:min(76svh,62vw);aspect-ratio:1;transform:translate(-50%,-50%)}
+.pmap__fig img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0}
+.pmap__fig svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.pmap__fig .guide{stroke:var(--gold);stroke-width:1;fill:none;vector-effect:non-scaling-stroke;opacity:.85;stroke-dasharray:1 1;stroke-dashoffset:1}
+.pgl{position:absolute;left:79%;transform:translateY(-50%);color:var(--gold-hi);font-size:.78rem;font-weight:600;white-space:nowrap;opacity:0;transition:opacity .5s}
+.pmap.g-on .pgl{opacity:1}
+.pzone{position:absolute;width:1.5rem;height:1.5rem;margin:-.75rem 0 0 -.75rem;background:var(--gold);transform:scale(0);transition:transform .5s var(--ease),background .3s;cursor:pointer;z-index:3}
+.pzone::after{content:"";position:absolute;inset:-.4rem;border:1px solid var(--gold);opacity:.6}
+.pzone.on{transform:scale(1)}
+.pzone:hover,.pzone.is-active{background:var(--gold-hi)}
+.pzone__tip{position:absolute;left:calc(100% + 1rem);top:50%;transform:translateY(-50%);width:16rem;padding:.9rem 1.1rem;background:var(--cream);color:var(--ink);font-size:.82rem;font-weight:600;line-height:1.35;text-align:left;display:none;cursor:default}
+.pzone__tip b{display:block;margin-bottom:.3rem}
+.pzone__tip a{display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;color:#7a5c18;text-decoration:underline;text-underline-offset:.2em}
+.pzone.is-active .pzone__tip{display:block}
+.pmap__cap{position:absolute;left:var(--pad);bottom:clamp(1.6rem,5svh,2.6rem);width:min(21rem,80vw);background:rgba(6,17,31,.82);box-shadow:0 0 0 1px var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:4;opacity:0;transition:opacity .4s}
+.pmap__cap b{display:block;background:var(--cream);color:var(--ink);padding:.65rem .9rem;font-size:.8rem;font-weight:700;line-height:1.35}
+.pmap__cap .t{position:relative;min-height:7.6rem}
+.pmap__cap p{position:absolute;inset:0;padding:.9rem;color:var(--mute);font-size:.86rem;line-height:1.45;opacity:0;transition:opacity .45s}
+.pmap__cap p.on{opacity:1}
+.pmap__cap p strong{display:block;color:var(--cream);margin-bottom:.3rem}
+.pmap__cap small{display:block;padding:0 .9rem .8rem;color:var(--faint);font-size:.74rem;font-weight:600}
+.pmap__cap::after{content:"";display:block;height:.25rem;background:var(--gold)}
+.pmap__steps{position:absolute;left:var(--pad);right:var(--pad);bottom:clamp(1.2rem,3.6svh,2rem);z-index:4;display:flex;flex-direction:column;gap:.8rem;opacity:var(--so,1)}
+.pmap__steps .eyebrow{opacity:var(--se,0);transition:opacity .5s}
+.pmap__steps ol{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}
+.pstep{position:relative;padding:1rem 1.15rem 1.1rem;background:rgba(6,17,31,.8);box-shadow:inset 0 0 0 1px var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transform:translateY(1.4rem);transition:opacity .6s,transform .8s var(--ease)}
+.pstep::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .8s var(--ease)}
+.pstep.in{opacity:.72;transform:none}.pstep.in.cur{opacity:1}.pstep.cur::before{transform:scaleX(1)}
+.pstep b{display:block;font-size:.76rem;font-weight:700;color:var(--gold);margin-bottom:.35rem}
+.pstep h3{font-family:var(--serif);font-weight:400;font-size:1.3rem;line-height:1.15;color:var(--cream)}
+.pstep p{margin-top:.45rem;font-size:.82rem;line-height:1.5;color:var(--mute)}
+@media (min-width:768px){.pmap__fig{top:42%;height:min(62svh,50vw)}}
+.pmap__panel{border-left:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(4,10,19,.72);min-width:0}
+.pmap__panel-in{width:39vw}
+.pmap__panel .pp{padding:2.4rem var(--pad) 2rem;display:flex;flex-direction:column;gap:1rem}
+.pmap__panel h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.2rem,3.4vw,3.4rem);line-height:1.04}
+.pmap__panel .pp p{color:var(--mute);max-width:30rem;line-height:1.7}
+.prow{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;border-top:1px solid var(--line);padding:1rem var(--pad);color:var(--cream);font-weight:600;font-size:.9rem}
+.prow i{flex:none;width:2rem;height:2rem;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.prow i svg{width:1rem;height:1rem}
+
 /* ---------- 3b orbit: a ring of arched cards that turns with the scroll ---------- */
 .orbit{position:relative;height:calc(100svh + var(--n,6) * 62svh);--cw:min(20vw,300px);--ch:calc(var(--cw) * 1.36);--R:min(34vw,540px)}
 .orbit__stage{position:sticky;top:0;height:100svh;overflow:hidden}
@@ -524,6 +571,15 @@ em{font-style:italic;color:var(--gold-hi)}
   .footer__cols{grid-template-columns:1fr 1fr;gap:1.6rem 1rem}
   .scenes__title{top:6rem}.scenes__head{display:none}
   .orbit{height:calc(100svh + var(--n,6) * 50svh)}
+  .pmap{height:520svh}
+  .pmap__stage{grid-template-columns:1fr!important;grid-template-rows:1fr 0fr}
+  .pmap__fig{height:auto;width:96vw;top:44%}
+  .pmap__cap{left:1rem;right:1rem;bottom:1rem;width:auto}
+  .pmap__panel{border-left:0;border-top:1px solid var(--line)}.pmap__panel-in{width:100%}
+  .pmap__panel .pp{padding:1.6rem 1.25rem 1.2rem}.prow{padding:.8rem 1.25rem}
+  .pgl{display:none}
+  .pmap__steps{display:none}
+  .pzone__tip{left:auto;right:calc(100% + .8rem);width:13rem}
   .sfilm{height:760svh}
   .sfilm__poster{object-fit:contain;object-position:50% 30%}
   .sfilm__ch:not(.sfilm__ch--c){padding:1.2rem 1.3rem;background:rgba(6,17,31,.62);box-shadow:inset 0 0 0 1px rgba(201,169,97,.22);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}

@@ -358,6 +358,6 @@ function start() {
     renderer.render(scene, camera);
   }
   requestAnimationFrame(frame);
-  root.classList.add('has-gl');
+  root.classList.add('has-gl'); root.classList.remove('no-gl');
   window.__pt = { anchors, shapes, U, layout };
 }
