@@ -138,12 +138,12 @@ em{font-style:italic;color:var(--gold-hi)}
 .macro__specs--single li{grid-template-columns:1fr}
 
 /* ---------- 2b scroll film: the camera move around the bust, one frame per scroll step ---------- */
-.sfilm{position:relative;height:1500svh;--fh:1500}
+.sfilm{position:relative;height:1700svh;--fh:1700}
 .sfilm__stage{position:sticky;top:0;height:100svh;overflow:hidden}
 .sfilm__poster,.sfilm__canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:calc(1 - var(--hand,0))}
 .sfilm__canvas{opacity:0;transition:opacity .5s}.sfilm.is-ready .sfilm__canvas{opacity:calc(1 - var(--hand,0));transition:none}
 .sfilm.is-ready .sfilm__poster{opacity:0}
-.sfilm > .pt-anchor{top:calc((var(--fh) - 100) * .95svh + 20svh);height:calc((var(--fh) - 100) * .05svh + 100svh)}
+.sfilm > .pt-anchor{top:calc((var(--fh) - 100) * var(--hf,.95) * 1svh + 20svh);height:calc((var(--fh) - 100) * (1 - var(--hf,.95)) * 1svh + 100svh)}
 .sfilm__hint{opacity:calc(1 - var(--p,0) * 12)}
 .sfilm__ch--hero{width:min(36rem,46vw);gap:1.2rem}
 .sfilm__ch--hero .hero__title{align-items:flex-start;gap:.4rem}
@@ -724,7 +724,7 @@ em{font-style:italic;color:var(--gold-hi)}
   .dr{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ltabs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .band{min-height:70svh}.band::before{background:linear-gradient(180deg,rgba(247,242,233,.2),rgba(247,242,233,.9) 55%)}
-  .sfilm{height:1200svh;--fh:1200}
+  .sfilm{height:1350svh;--fh:1350}
   .sfilm__ch--hero{width:auto;gap:.7rem}
   .sfilm__ch--hero .hero__word{font-size:clamp(2.8rem,14vw,4.6rem)}
   .sfilm__ch--hero > p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
