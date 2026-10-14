@@ -37,7 +37,7 @@
   } else begin();
 
   /* ---------- nav: hide on scroll down, show on scroll up; phone menu ---------- */
-  const nav = $('.nav'); let lastY = 0;
+  const nav = $('.nav'); let lastY = 0; const lightEl = $('.light');
   const menuBtn = $('.nav__menu');
   if (menuBtn) menuBtn.addEventListener('click', () => {
     const open = !root.classList.contains('menu-open'); root.classList.toggle('menu-open', open); menuBtn.setAttribute('aria-expanded', open);
@@ -73,7 +73,7 @@
   const prog = el => { const r = el.getBoundingClientRect(); return clamp(-r.top / Math.max(1, r.height - innerHeight)); };
   function tick() {
     const H = innerHeight, y = scrollY;
-    if (nav) { nav.classList.toggle('is-scrolled', y > 40); if (!root.classList.contains('menu-open')) nav.classList.toggle('is-hidden', y > lastY + 4 && y > H * .6); if (y < lastY - 4) nav.classList.remove('is-hidden'); }
+    if (nav) { nav.classList.toggle('is-scrolled', y > 40); if (lightEl) nav.classList.toggle('on-light', (() => { const r = lightEl.getBoundingClientRect(); return r.top < 60 && r.bottom > 60; })()); if (!root.classList.contains('menu-open')) nav.classList.toggle('is-hidden', y > lastY + 4 && y > H * .6); if (y < lastY - 4) nav.classList.remove('is-hidden'); }
     lastY = y;
     heroes.forEach(h => {
       const p = prog(h), copy = $('[data-hero-copy]', h) || $('.phero__copy', h), hint = $('[data-hero-hint]', h), ring = $('[data-hero-ring]', h);
@@ -220,9 +220,21 @@
       const dpr = Math.min(devicePixelRatio || 1, 2, Math.max(sw / Math.max(1, r.width), sh / Math.max(1, r.height), .75));
       cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr)); drawn = -1;
     };
+    const scenes = (sf.dataset.scenes || '').split(',').filter(Boolean).map(Number), XF = 14;   // frames of crossfade either side of a scene start
+    const blit = (im, alpha) => {
+      const W = cv.width, H = cv.height, iw = im.width, ih = im.height; ctx.globalAlpha = alpha;
+      if (set === 'm') { const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s, x = (W - w) / 2, y = Math.max(0, H * .4 - h / 2); ctx.drawImage(im, x, y, w, h); }
+      else { const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
+      ctx.globalAlpha = 1;
+    };
+    const frameOf = i => (bmps[i] && typeof bmps[i] !== 'string') ? bmps[i] : imgs[i];
     const draw = i => {
-      const im = (bmps[i] && typeof bmps[i] !== 'string') ? bmps[i] : imgs[i]; if (!im) return;
+      const im = frameOf(i); if (!im) return;
       const W = cv.width, H = cv.height, iw = im.width, ih = im.height;
+      // crossing a scene boundary: hold the last frame of the previous scene under the new one and fade it out
+      const sc = scenes.find(s0 => i >= s0 && i < s0 + XF);
+      if (sc !== undefined && set === 'd') { const prev = nearest(sc - 1), pim = prev >= 0 ? frameOf(prev) : null;
+        if (pim) { blit(pim, 1); blit(im, (i - sc + 1) / XF); drawn = i; sf.classList.add('is-ready'); return; } }
       if (set === 'm') {     // phones: the 4:5 film fills the width, sits in the upper part, and feathers into the navy above and below
         const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s, x = (W - w) / 2, y = Math.max(0, H * .4 - h / 2), f = h * .14;
         ctx.fillStyle = '#06111f'; ctx.fillRect(0, 0, W, H); ctx.drawImage(im, x, y, w, h);
@@ -264,6 +276,31 @@
     $$('.pzone').forEach(o => o.classList.remove('is-active'));
     if (!was) z.classList.add('is-active');
   }));
+
+  /* ---------- light band: before/after slider, result tabs, clinic tabs ---------- */
+  $$('[data-cmp]').forEach(c => {
+    const set = x => c.style.setProperty('--x', (clamp(x) * 100).toFixed(2) + '%');
+    const at = e => set((e.clientX - c.getBoundingClientRect().left) / c.getBoundingClientRect().width);
+    let down = false;
+    c.addEventListener('pointerdown', e => { down = true; c.setPointerCapture(e.pointerId); at(e); });
+    c.addEventListener('pointermove', e => { if (down) at(e); });
+    addEventListener('pointerup', () => { down = false; });
+    set(.5);
+  });
+  $$('[data-ba-tabs]').forEach(t => $$('.tab', t).forEach(b => b.addEventListener('click', () => {
+    const sec = b.closest('section'); $$('.tab', t).forEach(x => x.classList.toggle('on', x === b));
+    $$('[data-ba]', sec).forEach(x => { if (!x.classList.contains('tab')) x.classList.toggle('on', x.dataset.ba === b.dataset.ba); });
+    const c = $('[data-cmp]', sec); if (c) c.style.setProperty('--x', '50%');
+  })));
+  $$('[data-loc-tabs]').forEach(t => $$('.ltab', t).forEach(b => b.addEventListener('click', () => {
+    const sec = b.closest('section'); $$('.ltab', t).forEach(x => x.classList.toggle('on', x === b));
+    $$('.loc', sec).forEach(x => x.classList.toggle('on', x.dataset.loc === b.dataset.loc));
+  })));
+  $$('.acc[data-acc]').forEach(g => $$('.acc__q', g).forEach(q => q.addEventListener('click', () => {
+    const it = q.parentElement, open = !it.classList.contains('open');
+    $$('.acc__item', g).forEach(o => { o.classList.remove('open'); $('.acc__q', o).setAttribute('aria-expanded', 'false'); });
+    if (open) { it.classList.add('open'); q.setAttribute('aria-expanded', 'true'); }
+  })));
 
   /* ---------- FAQ accordion ---------- */
   $$('[data-acc]').forEach(g => $$('.faq__q', g).forEach(q => q.addEventListener('click', () => {
