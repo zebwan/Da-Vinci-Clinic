@@ -58,6 +58,7 @@
   const orbits = $$('[data-orbit]');
   const studies = $$('[data-study]');
   const pmaps = $$('[data-pmap]');
+  const awardsEls = $$('[data-awards]');
   const chapters = $$('[data-chapter]');
   const scenes = $$('[data-scenes]');
   const heritage = $$('[data-heritage]');
@@ -106,6 +107,11 @@
       s.style.setProperty('--q', q.toFixed(4)); s.style.setProperty('--l', q > 0 && q < 1 ? '1' : '0'); s.style.setProperty('--z', p > .82 ? '1.04' : '1');
       tags.forEach((t, i) => t.classList.toggle('on', q > .2 + i * .17));
       steps.forEach((li, i) => li.classList.toggle('on', p > i * (.78 / steps.length) + .04 && (p < (i + 1) * (.78 / steps.length) + .04 || i === steps.length - 1)));
+    });
+    awardsEls.forEach(a => {     // the trophy columns drift upward at three speeds while the stage is pinned
+      const p = prog(a), cols = a._c || (a._c = $$('.awards__col', a)); a.classList.toggle('in', p > .04);
+      if (innerWidth < 768) return;
+      cols.forEach((c, k) => { const h = c.scrollHeight, travel = Math.max(0, h - innerHeight * .92) * (1 + k * .22); c.style.setProperty('--y', (-p * travel).toFixed(1)); });
     });
     pmaps.forEach(m => {     // design 2's face study, same beats: words, face, steps, proportion lines, markers, then the panel
       const p = prog(m), words = m._w || (m._w = $$('.pmap__words div', m));
@@ -167,27 +173,57 @@
     }));
   });
 
-  /* ---------- scroll film: the pinned stage plays the camera move frame by frame as you scroll ---------- */
+  /* ---------- scroll film: the pinned stage plays the camera move frame by frame as you scroll ----------
+     Smoothness comes from three things (the same recipe as pear.no): frames are fetched nearest-first around where the
+     reader is, a window of frames around the current one is kept DECODED as ImageBitmaps so a draw never waits on a
+     decode, and the canvas is sized to the source frame, not to the Retina viewport, so each draw is a cheap blit. */
   $$('[data-sfilm]').forEach(sf => {
-    const n = +sf.dataset.n, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d'), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
+    const n = +sf.dataset.n, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d', { alpha: false }), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
     const pick = () => (innerWidth < 768 && innerHeight > innerWidth ? 'm' : 'd');
-    let set = pick(), imgs = [], loaded = new Uint8Array(n), started = false, cur = 0, target = 0, drawn = -1, visible = false, raf = 0;
+    const WIN = 36, CAP = 96, PAR = 8;
+    let set = pick(), imgs = [], loaded, bmps, bmpN = 0, pending, gen = 0, cur = -1, drawn = -1, visible = false, raf = 0, aim = 0, queue = [], inflight = 0;
     const src = i => `${sf.dataset.base}${set}/${String(i + 1).padStart(4, '0')}.webp`;
-    // coarse-to-fine: every 32nd frame first, then 16th, 8th ... so a fast scroll always has a near frame to show
-    const order = () => { const o = [], seen = new Uint8Array(n); for (let s = 32; s >= 1; s >>= 1) for (let i = 0; i < n; i += s) if (!seen[i]) { seen[i] = 1; o.push(i); } if (!seen[n - 1]) o.splice(1, 0, n - 1); return o; };
-    const load = () => {
-      if (started) return; started = true; imgs = new Array(n); const want = set;
-      const q = order(); let k = 0, active = 0;
-      const next = () => { while (active < 6 && k < q.length && want === set) { const i = q[k++], im = new Image(); active++; im.decoding = 'async';
-        im.onload = () => { if (want !== set) return; loaded[i] = 1; active--; drawn = -1; next(); };
-        im.onerror = () => { active--; next(); }; im.src = src(i); imgs[i] = im; } };
-      next();
+    const reset = () => { imgs = new Array(n); loaded = new Uint8Array(n); bmps = new Array(n); bmpN = 0; pending = new Uint8Array(n); queue = []; inflight = 0; drawn = -1; gen++; };
+    reset();
+    // fetch order: the frame under the reader first, then outward, then a coarse-to-fine sweep of everything else
+    const order = () => { const o = [], seen = new Uint8Array(n); for (let s = 32; s >= 1; s >>= 1) for (let i = 0; i < n; i += s) if (!seen[i]) { seen[i] = 1; o.push(i); } return o; };
+    const nextToFetch = () => {
+      for (let d = 0; d <= 24; d++) for (const i of (d ? [aim + d, aim - d] : [aim])) if (i >= 0 && i < n && !loaded[i] && !pending[i]) return i;
+      while (queue.length) { const i = queue.shift(); if (!loaded[i] && !pending[i]) return i; }
+      return -1;
+    };
+    const pump = () => {
+      const g = gen;
+      while (inflight < PAR) {
+        const i = nextToFetch(); if (i < 0) return;
+        pending[i] = 1; inflight++; const im = new Image(); im.decoding = 'async';
+        im.onload = () => { if (g !== gen) return; loaded[i] = 1; imgs[i] = im; inflight--; warm(); pump(); };
+        im.onerror = () => { if (g !== gen) return; pending[i] = 0; inflight--; pump(); };
+        im.src = src(i);
+      }
+    };
+    let started = false;
+    const load = () => { if (started) return; started = true; queue = order(); pump(); };
+    // decoded window: bitmaps for ±WIN frames around the current one; anything further out is released
+    const warm = () => {
+      const g = gen, lo = Math.max(0, cur - WIN), hi = Math.min(n - 1, cur + WIN);
+      for (let d = 0; d <= WIN; d++) for (const i of (d ? [cur + d, cur - d] : [cur])) {
+        if (i < lo || i > hi || !loaded[i] || bmps[i]) continue;
+        bmps[i] = 'making'; bmpN++;
+        createImageBitmap(imgs[i]).then(b => { if (g !== gen) { b.close(); return; } bmps[i] = b; if (i === cur && drawn !== i) draw(i); }, () => { bmps[i] = null; bmpN--; });
+      }
+      if (bmpN > CAP) for (let i = 0; i < n; i++) if (bmps[i] && typeof bmps[i] !== 'string' && (i < lo - WIN || i > hi + WIN)) { bmps[i].close(); bmps[i] = null; bmpN--; }
     };
     const nearest = i => { if (loaded[i]) return i; for (let d = 1; d < n; d++) { if (i - d >= 0 && loaded[i - d]) return i - d; if (i + d < n && loaded[i + d]) return i + d; } return -1; };
-    const size = () => { const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr)); drawn = -1; };
+    const size = () => {     // canvas at source resolution (never above it): a draw is then a plain blit, even on Retina
+      const r = cv.getBoundingClientRect(), [sw, sh] = (set === 'm' ? sf.dataset.mratio : sf.dataset.ratio).split('x').map(Number);
+      const dpr = Math.min(devicePixelRatio || 1, 2, Math.max(sw / Math.max(1, r.width), sh / Math.max(1, r.height), .75));
+      cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr)); drawn = -1;
+    };
     const draw = i => {
-      const im = imgs[i]; if (!im || !im.naturalWidth) return; const W = cv.width, H = cv.height, iw = im.naturalWidth, ih = im.naturalHeight;
-      if (set === 'm') {     // phones: the 3:4 film fills the width, sits in the upper part, and feathers into the navy above and below
+      const im = (bmps[i] && typeof bmps[i] !== 'string') ? bmps[i] : imgs[i]; if (!im) return;
+      const W = cv.width, H = cv.height, iw = im.width, ih = im.height;
+      if (set === 'm') {     // phones: the 4:5 film fills the width, sits in the upper part, and feathers into the navy above and below
         const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s, x = (W - w) / 2, y = Math.max(0, H * .4 - h / 2), f = h * .14;
         ctx.fillStyle = '#06111f'; ctx.fillRect(0, 0, W, H); ctx.drawImage(im, x, y, w, h);
         const top = ctx.createLinearGradient(0, y, 0, y + f); top.addColorStop(0, '#06111f'); top.addColorStop(1, 'rgba(6,17,31,0)'); ctx.fillStyle = top; ctx.fillRect(0, y, W, f);
@@ -195,17 +231,20 @@
       } else { const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
       drawn = i; sf.classList.add('is-ready');
     };
+    const hand = $('.sfilm__hand', sf);
     const loop = () => {
       raf = 0; const r = sf.getBoundingClientRect(), p = clamp(-r.top / Math.max(1, r.height - innerHeight));
-      target = p * (n - 1); cur += (target - cur) * (reduced ? 1 : .2); if (Math.abs(target - cur) < .05) cur = target;
-      const i = nearest(Math.round(cur)); if (i >= 0 && i !== drawn) draw(i);
+      const f = Math.round(p * (n - 1));      // direct: the scroll is already smoothed by Lenis; a second easing only adds lag
+      if (f !== cur) { cur = f; aim = f; warm(); }
+      const i = nearest(cur); if (i >= 0 && i !== drawn) draw(i);
       chs.forEach(c => c.classList.toggle('on', p >= +c.dataset.from && p <= +c.dataset.to));
-      bar.style.transform = `scaleX(${p.toFixed(4)})`;
+      bar.style.transform = `scaleX(${p.toFixed(4)})`; sf.style.setProperty('--p', p.toFixed(4));
+      if (hand) sf.style.setProperty('--hand', smooth(clamp((p - +hand.dataset.from) / Math.max(.001, +hand.dataset.to - +hand.dataset.from))).toFixed(3));
       if (visible) raf = requestAnimationFrame(loop);
     };
     new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) load(); }), { rootMargin: '250% 0px' }).observe(sf);
     new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (visible && !raf) { size(); raf = requestAnimationFrame(loop); } }), { rootMargin: '10% 0px' }).observe(sf);
-    addEventListener('resize', () => { const s2 = pick(); if (s2 !== set) { set = s2; loaded = new Uint8Array(n); started = false; if (visible) load(); } size(); });
+    addEventListener('resize', () => { const s2 = pick(); if (s2 !== set) { set = s2; reset(); started = false; if (visible) load(); } size(); });
   });
 
   /* ---------- face map: a point on the portrait opens its treatment family; cycles on its own ---------- */
