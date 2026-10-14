@@ -181,9 +181,9 @@
     const n = +sf.dataset.n, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d', { alpha: false }), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
     const pick = () => (innerWidth < 768 && innerHeight > innerWidth ? 'm' : 'd');
     const WIN = 36, CAP = 96, PAR = 8;
-    let set = pick(), imgs = [], loaded, bmps, bmpN = 0, pending, gen = 0, cur = -1, drawn = -1, visible = false, raf = 0, aim = 0, queue = [], inflight = 0;
+    let set = pick(), imgs = [], loaded, bmps, bmpN = 0, pending, tries, gen = 0, cur = -1, drawn = -1, visible = false, raf = 0, aim = 0, queue = [], inflight = 0;
     const src = i => `${sf.dataset.base}${set}/${String(i + 1).padStart(4, '0')}.webp`;
-    const reset = () => { imgs = new Array(n); loaded = new Uint8Array(n); bmps = new Array(n); bmpN = 0; pending = new Uint8Array(n); queue = []; inflight = 0; drawn = -1; gen++; };
+    const reset = () => { imgs = new Array(n); loaded = new Uint8Array(n); bmps = new Array(n); bmpN = 0; pending = new Uint8Array(n); tries = new Uint8Array(n); queue = []; inflight = 0; drawn = -1; gen++; };
     reset();
     // fetch order: the frame under the reader first, then outward, then a coarse-to-fine sweep of everything else
     const order = () => { const o = [], seen = new Uint8Array(n); for (let s = 32; s >= 1; s >>= 1) for (let i = 0; i < n; i += s) if (!seen[i]) { seen[i] = 1; o.push(i); } return o; };
@@ -198,7 +198,7 @@
         const i = nextToFetch(); if (i < 0) return;
         pending[i] = 1; inflight++; const im = new Image(); im.decoding = 'async';
         im.onload = () => { if (g !== gen) return; loaded[i] = 1; imgs[i] = im; inflight--; warm(); pump(); };
-        im.onerror = () => { if (g !== gen) return; pending[i] = 0; inflight--; pump(); };
+        im.onerror = () => { if (g !== gen) return; inflight--; if (++tries[i] < 3) setTimeout(() => { if (g === gen) { pending[i] = 0; pump(); } }, 1500 * tries[i]); else pump(); };   // a frame that fails three times is left out; the nearest loaded one stands in
         im.src = src(i);
       }
     };
