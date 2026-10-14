@@ -256,13 +256,13 @@ function start() {
   const anchors = anchorsEls.map(el => ({
     el, shape: el.dataset.pt, x: num(el, 'ptX', 0), xm: num(el, 'ptXm', 0), y: num(el, 'ptY', 0), ym: num(el, 'ptYm', num(el, 'ptY', 0)),
     s: num(el, 'ptS', 1), sm: num(el, 'ptSm', num(el, 'ptS', 1)), rx: num(el, 'ptRx', 0), ry: num(el, 'ptRy', 0), spin: num(el, 'ptSpin', 0),
-    op: num(el, 'ptOp', 1), light: num(el, 'ptLight', 0), inter: el.hasAttribute('data-pt-interactive'), f0: 0, f1: 0, rot: 0,
+    op: num(el, 'ptOp', 1), opd: num(el, 'ptOp', 1), opm: num(el, 'ptOpm', num(el, 'ptOp', 1)), light: num(el, 'ptLight', 0), inter: el.hasAttribute('data-pt-interactive'), f0: 0, f1: 0, rot: 0,
     orbit: num(el, 'ptOrbit', 0), tilt: num(el, 'ptTilt', 0), glow: num(el, 'ptGlow', .4), size: num(el, 'ptSize', 1),
   }));
   let vh = innerHeight;
   const layout = () => {
-    vh = innerHeight; const y0 = scrollY;
-    anchors.forEach(a => { const r = a.el.getBoundingClientRect(), top = r.top + y0;
+    vh = innerHeight; const y0 = scrollY, ph = innerWidth < 768;
+    anchors.forEach(a => { a.op = ph ? a.opm : a.opd; const r = a.el.getBoundingClientRect(), top = r.top + y0;
       a.f0 = top - vh * .2; a.f1 = top + r.height - vh * .8; if (a.f1 < a.f0) { const c = top + r.height / 2 - vh / 2; a.f0 = c - vh * .05; a.f1 = c + vh * .05; } });
     anchors.sort((a, b) => a.f0 - b.f0);
   };
