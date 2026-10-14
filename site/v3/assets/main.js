@@ -140,6 +140,47 @@
     }));
   });
 
+  /* ---------- scroll film: the pinned stage plays the camera move frame by frame as you scroll ---------- */
+  $$('[data-sfilm]').forEach(sf => {
+    const n = +sf.dataset.n, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d'), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
+    const pick = () => (innerWidth < 768 && innerHeight > innerWidth ? 'm' : 'd');
+    let set = pick(), imgs = [], loaded = new Uint8Array(n), started = false, cur = 0, target = 0, drawn = -1, visible = false, raf = 0;
+    const src = i => `${sf.dataset.base}${set}/${String(i + 1).padStart(4, '0')}.webp`;
+    // coarse-to-fine: every 32nd frame first, then 16th, 8th ... so a fast scroll always has a near frame to show
+    const order = () => { const o = [], seen = new Uint8Array(n); for (let s = 32; s >= 1; s >>= 1) for (let i = 0; i < n; i += s) if (!seen[i]) { seen[i] = 1; o.push(i); } if (!seen[n - 1]) o.splice(1, 0, n - 1); return o; };
+    const load = () => {
+      if (started) return; started = true; imgs = new Array(n); const want = set;
+      const q = order(); let k = 0, active = 0;
+      const next = () => { while (active < 6 && k < q.length && want === set) { const i = q[k++], im = new Image(); active++; im.decoding = 'async';
+        im.onload = () => { if (want !== set) return; loaded[i] = 1; active--; drawn = -1; next(); };
+        im.onerror = () => { active--; next(); }; im.src = src(i); imgs[i] = im; } };
+      next();
+    };
+    const nearest = i => { if (loaded[i]) return i; for (let d = 1; d < n; d++) { if (i - d >= 0 && loaded[i - d]) return i - d; if (i + d < n && loaded[i + d]) return i + d; } return -1; };
+    const size = () => { const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr)); drawn = -1; };
+    const draw = i => {
+      const im = imgs[i]; if (!im || !im.naturalWidth) return; const W = cv.width, H = cv.height, iw = im.naturalWidth, ih = im.naturalHeight;
+      if (set === 'm') {     // phones: the 3:4 film fills the width, sits in the upper part, and feathers into the navy above and below
+        const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s, x = (W - w) / 2, y = Math.max(0, H * .4 - h / 2), f = h * .14;
+        ctx.fillStyle = '#06111f'; ctx.fillRect(0, 0, W, H); ctx.drawImage(im, x, y, w, h);
+        const top = ctx.createLinearGradient(0, y, 0, y + f); top.addColorStop(0, '#06111f'); top.addColorStop(1, 'rgba(6,17,31,0)'); ctx.fillStyle = top; ctx.fillRect(0, y, W, f);
+        const bot = ctx.createLinearGradient(0, y + h - f * 1.4, 0, y + h); bot.addColorStop(0, 'rgba(6,17,31,0)'); bot.addColorStop(1, '#06111f'); ctx.fillStyle = bot; ctx.fillRect(0, y + h - f * 1.4, W, f * 1.4 + 1);
+      } else { const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); }
+      drawn = i; sf.classList.add('is-ready');
+    };
+    const loop = () => {
+      raf = 0; const r = sf.getBoundingClientRect(), p = clamp(-r.top / Math.max(1, r.height - innerHeight));
+      target = p * (n - 1); cur += (target - cur) * (reduced ? 1 : .2); if (Math.abs(target - cur) < .05) cur = target;
+      const i = nearest(Math.round(cur)); if (i >= 0 && i !== drawn) draw(i);
+      chs.forEach(c => c.classList.toggle('on', p >= +c.dataset.from && p <= +c.dataset.to));
+      bar.style.transform = `scaleX(${p.toFixed(4)})`;
+      if (visible) raf = requestAnimationFrame(loop);
+    };
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) load(); }), { rootMargin: '250% 0px' }).observe(sf);
+    new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (visible && !raf) { size(); raf = requestAnimationFrame(loop); } }), { rootMargin: '10% 0px' }).observe(sf);
+    addEventListener('resize', () => { const s2 = pick(); if (s2 !== set) { set = s2; loaded = new Uint8Array(n); started = false; if (visible) load(); } size(); });
+  });
+
   /* ---------- face map: a point on the portrait opens its treatment family; cycles on its own ---------- */
   $$('[data-fmap]').forEach(m => {
     const pins = $$('.fpin', m), cards = $$('.fcard', m); let i = 0, timer;
