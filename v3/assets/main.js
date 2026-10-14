@@ -6,6 +6,8 @@
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const smooth = t => t * t * (3 - 2 * t);
   root.classList.add('js');
+  // opened straight from Finder (file://) the particle module can't load: show the still fallbacks instead of empty space
+  setTimeout(() => { if (!root.classList.contains('has-gl')) root.classList.add('no-gl'); }, location.protocol === 'file:' ? 600 : 6000);
   if (reduced) root.classList.add('reduced-motion');
 
   /* ---------- smooth scroll (Lenis on the window, as on the template) ---------- */
@@ -55,6 +57,7 @@
   const cuffs = $$('[data-cuff]');
   const orbits = $$('[data-orbit]');
   const studies = $$('[data-study]');
+  const pmaps = $$('[data-pmap]');
   const chapters = $$('[data-chapter]');
   const scenes = $$('[data-scenes]');
   const heritage = $$('[data-heritage]');
@@ -103,6 +106,30 @@
       s.style.setProperty('--q', q.toFixed(4)); s.style.setProperty('--l', q > 0 && q < 1 ? '1' : '0'); s.style.setProperty('--z', p > .82 ? '1.04' : '1');
       tags.forEach((t, i) => t.classList.toggle('on', q > .2 + i * .17));
       steps.forEach((li, i) => li.classList.toggle('on', p > i * (.78 / steps.length) + .04 && (p < (i + 1) * (.78 / steps.length) + .04 || i === steps.length - 1)));
+    });
+    pmaps.forEach(m => {     // design 2's face study, same beats: words, face, steps, proportion lines, markers, then the panel
+      const p = prog(m), words = m._w || (m._w = $$('.pmap__words div', m));
+      const fade = (a, b, c, d) => p < a ? 0 : p < b ? (p - a) / (b - a) : p < c ? 1 : p < d ? 1 - (p - c) / (d - c) : 0;
+      words[0].style.opacity = p < .02 ? 1 : fade(-1, 0, .08, .12); words[1].style.opacity = fade(.12, .15, .2, .24);
+      words.forEach(w => { w.style.transform = `translateY(${(1 - +w.style.opacity) * 1.2}rem)`; });
+      const im = m._im || (m._im = $('.pmap__fig img', m));
+      im.style.opacity = p < .22 ? 0 : p < .3 ? (p - .22) / .08 * .35 : p < .38 ? .35 + (p - .3) / .08 * .65 : 1;
+      const g = clamp((p - .4) / .12);
+      (m._g || (m._g = $$('.pmap__fig .guide', m))).forEach((el, i) => { el.style.strokeDashoffset = 1 - clamp(g * 1.6 - i * .15); });
+      m.classList.toggle('g-on', g > .5);
+      (m._z || (m._z = $$('.pzone', m))).forEach((z, i) => z.classList.toggle('on', p > .54 + i * .03));
+      const cap = p < .38 ? 0 : p < .52 ? 1 : p < .66 ? 2 : p < .78 ? 3 : 'z';
+      (m._c || (m._c = $$('.pmap__cap p', m))).forEach(el => el.classList.toggle('on', el.dataset.i == String(cap) && p > .24));
+      const desk = innerWidth > 767;
+      (m._cb || (m._cb = $('.pmap__cap', m))).style.opacity = desk ? (cap === 'z' ? 1 : 0) : (p > .24 && p < .82 ? 1 : 0);
+      if (desk) {     // the steps stay on screen and build up side by side; the newest one carries the gold rule
+        const st = m._st || (m._st = $$('.pstep', m)), row = m._row || (m._row = $('.pmap__steps', m)), th = [.24, .38, .52, .66];
+        st.forEach((li, i) => { li.classList.toggle('in', p >= th[i]); li.classList.toggle('cur', cap === i); });
+        row.style.setProperty('--se', p >= .24 ? 1 : 0); row.style.setProperty('--so', (1 - smooth(clamp((p - .76) / .05))).toFixed(3));
+      }
+      const open = clamp((p - .8) / .1), stage = m._s || (m._s = $('.pmap__stage', m));
+      if (innerWidth > 767) { stage.style.gridTemplateColumns = `1fr ${open * 39}vw`; stage.style.gridTemplateRows = ''; }
+      else { stage.style.gridTemplateRows = `1fr ${open * 62}svh`; stage.style.gridTemplateColumns = ''; }
     });
     chapters.forEach(c => {
       const p = prog(c), items = c._it || (c._it = $$('.chapter__item', c)), i = Math.min(items.length - 1, Math.floor(p * items.length * .999));
@@ -190,6 +217,14 @@
     new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { m.classList.add('in'); auto(); } else clearInterval(timer); }), { threshold: .3 }).observe(m);
     go(0);
   });
+
+  /* face study markers: tap to open the treatment tip */
+  $$('.pzone').forEach(z => z.addEventListener('click', e => {
+    if (e.target.closest('a')) return;
+    const was = z.classList.contains('is-active');
+    $$('.pzone').forEach(o => o.classList.remove('is-active'));
+    if (!was) z.classList.add('is-active');
+  }));
 
   /* ---------- FAQ accordion ---------- */
   $$('[data-acc]').forEach(g => $$('.faq__q', g).forEach(q => q.addEventListener('click', () => {
