@@ -90,8 +90,11 @@
   });
   sizeStripes(); addEventListener('resize', sizeStripes); addEventListener('load', sizeStripes);
 
-  // awards columns: their content height only changes on resize/load, so measure it then, never inside the scroll loop
-  const sizeAwards = () => awardsEls.forEach(a => $$('.awards__col', a).forEach(c => { c._h = c.scrollHeight; }));
+  // awards: one row the scroll pulls sideways (desktop). Its overflow only changes on resize/load, so measure it then.
+  const sizeAwards = () => awardsEls.forEach(a => {
+    const tr = a._tr || (a._tr = $('.awards__track', a)), extra = innerWidth < 768 ? 0 : Math.max(0, tr.scrollWidth - innerWidth);
+    a._extra = extra; a.style.height = innerWidth < 768 ? '' : (innerHeight * 1.15 + extra * .9) + 'px';
+  });
   sizeAwards(); addEventListener('resize', sizeAwards); addEventListener('load', sizeAwards);
 
   // put(): write a style only when it changed. Redundant writes still invalidate styles, and on a long page that adds up.
@@ -130,8 +133,8 @@
       put(track, 'transform', `translate3d(${x.toFixed(1)}px,0,0)`);
       if (!near(geo.get(s), H)) return;
       // a lens across the track: the piece in the middle is fully lit, its picture drifts against the motion (parallax)
-      s._p.forEach(pc => { const b = geo.get(pc); if (!b) return; const f = clamp((b.left + dx + b.width / 2 - W / 2) / (W * .6), -1.4, 1.4), im = pc._im !== undefined ? pc._im : (pc._im = $('.piece__media img', pc));
-        put(pc, 'opacity', (1 - Math.min(1, Math.abs(f)) * .3).toFixed(3)); if (im) put(im, 'translate', `${(f * -4.5).toFixed(2)}% 0`); });
+      s._p.forEach(pc => { const b = geo.get(pc); if (!b) return; if (pc._still === undefined) pc._still = pc.matches('.piece--photo, .piece--wide'); const f = clamp((b.left + dx + b.width / 2 - W / 2) / (W * .6), -1.4, 1.4), im = pc._im !== undefined ? pc._im : (pc._im = $('.piece__media img', pc));
+        put(pc, 'opacity', (1 - Math.min(1, Math.abs(f)) * .3).toFixed(3)); if (im && !pc._still) put(im, 'translate', `${(f * -4.5).toFixed(2)}% 0`); });
     });
     takeovers.forEach(t => {     // the window opening to full screen: transforms only (a clip-path redrawn every frame was too heavy)
       if (!near(geo.get(t), H, H)) return;
@@ -162,14 +165,15 @@
       tags.forEach((t, i) => t.classList.toggle('on', q > .2 + i * .17));
       steps.forEach((li, i) => li.classList.toggle('on', p > i * (.78 / steps.length) + .04 && (p < (i + 1) * (.78 / steps.length) + .04 || i === steps.length - 1)));
     });
-    awardsEls.forEach(a => {     // the trophy columns drift upward at three speeds while the stage is pinned
-      const p = prog(a), cols = a._c || (a._c = $$('.awards__col', a)); a.classList.toggle('in', p > .04);
+    awardsEls.forEach(a => {     // one row of trophies pulled sideways while the stage is pinned (desktop); phones swipe it
+      const p = prog(a); a.classList.toggle('in', p > .02 || W < 768);
       if (W < 768) return;
-      cols.forEach((c, k) => { const yy = -p * Math.max(0, (c._h || 0) - H * .92) * (1 + k * .22); c._dy = yy - (c._y || 0); c._y = yy; put(c, 'transform', `translate3d(0,${yy.toFixed(1)}px,0)`); });
+      const tr = a._tr || (a._tr = $('.awards__track', a)), x = -clamp((p - .06) / .9) * (a._extra || 0), dx = x - (a._x || 0); a._x = x;
+      put(tr, 'transform', `translate3d(${x.toFixed(1)}px,0,0)`);
       if (!near(geo.get(a), H)) return;
-      // a lens on the cabinet: the trophies crossing the middle of the screen come forward, the ones at the edges sink back
-      (a._aw || []).forEach(w => { const b = geo.get(w); if (!b) return; const f = clamp(Math.abs(b.top + (w.parentElement._dy || 0) + b.height / 2 - H * .52) / (H * .55));
-        put(w, 'scale', (1.04 - f * f * .16).toFixed(3)); put(w, 'opacity', (1 - f * f * .55).toFixed(3)); });
+      // a lens along the row: the trophy crossing the middle comes forward, the ones toward the edges sink back
+      (a._aw || []).forEach(w => { const b = geo.get(w); if (!b) return; const f = clamp(Math.abs(b.left + dx + b.width / 2 - W / 2) / (W * .55));
+        put(w, 'scale', (1.04 - f * f * .14).toFixed(3)); put(w, 'opacity', (1 - f * f * .5).toFixed(3)); });
     });
     pmaps.forEach(m => {     // design 2's face study, same beats: words, face, steps, proportion lines, markers, then the panel
       if (!near(geo.get(m), H, H)) return;
@@ -346,6 +350,20 @@
     new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (visible && !raf) { size(); raf = requestAnimationFrame(loop); } }), { rootMargin: '10% 0px' }).observe(sf);
     addEventListener('resize', () => { const s2 = pick(); if (s2 !== set) { set = s2; reset(); started = false; if (visible) load(); } size(); });
     // the first frame paints from the poster <img> until the decoded film is ready
+  });
+
+  /* ---------- background clips: load when near, play once when on screen, then rest on the last frame ---------- */
+  $$('[data-vband]').forEach(b => {
+    const v = $('video', b); let primed = false, done = false;
+    v.muted = true;
+    const prime = () => { if (primed) return; primed = true; const t = innerWidth < 768 && innerHeight > innerWidth ? 'm' : 'd';
+      v.poster = v.dataset['p' + t]; if (!reduced) { v.src = v.dataset[t]; v.load(); } };
+    v.addEventListener('ended', () => { done = true; });
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) prime(); }), { rootMargin: '120% 0px' }).observe(b);
+    new IntersectionObserver(es => es.forEach(e => {
+      if (reduced || done) return;
+      if (e.isIntersecting) { prime(); v.play().catch(() => {}); } else if (!v.paused) v.pause();
+    }), { threshold: .45 }).observe(b);
   });
 
   /* ---------- face map: a point on the portrait opens its treatment family; cycles on its own ---------- */
