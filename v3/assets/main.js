@@ -37,7 +37,7 @@
   } else begin();
 
   /* ---------- nav: hide on scroll down, show on scroll up; phone menu ---------- */
-  const nav = $('.nav'); let lastY = 0; const lightEl = $('.light');
+  const nav = $('.nav'); let lastY = 0;
   const menuBtn = $('.nav__menu');
   if (menuBtn) menuBtn.addEventListener('click', () => {
     const open = !root.classList.contains('menu-open'); root.classList.toggle('menu-open', open); menuBtn.setAttribute('aria-expanded', open);
@@ -48,6 +48,11 @@
   /* ---------- reveals ---------- */
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
   $$('.rv, [data-reveal], .card__media').forEach(el => io.observe(el));
+  // every picture gets an entrance (the user: after the films, still pictures felt static). Pictures that a section already
+  // animates with the scroll (film, study, face study, takeover, lookbook, heritage, before/after) keep their own motion.
+  const SKIP = '.sfilm, .pt-fb, .study, .pmap, .takeover, .lookbook, .heritage, .cmp, .pmq, .orbit, .nav, .overlay, .film, .footer';
+  const iio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); iio.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
+  if (!reduced) $$('main img').forEach(im => { if (im.closest(SKIP)) return; im.classList.add('rvi'); iio.observe(im); });
 
   /* ---------- scroll-linked sections ---------- */
   const heroes = $$('.hero, .phero');
@@ -63,21 +68,35 @@
   const scenes = $$('[data-scenes]');
   const heritage = $$('[data-heritage]');
   const looks = $$('[data-lookbook]');
+  const pars = $$('.par');
+  const decks = $$('[data-stack]');
+
+  /* decks (services cards on the home page, runs of plain sections on inner pages): each card is pinned by CSS sticky; here its
+     top is set so a card taller than the screen sticks by its bottom edge instead (nothing is ever cut off), and --q says how far
+     the next card has slid over it, so the one underneath sinks back and dims */
+  const rem = () => parseFloat(getComputedStyle(root).fontSize) || 16;
+  const sizeDecks = () => decks.forEach(dk => {
+    const cs = dk._c || (dk._c = [...dk.children]), svc = dk.classList.contains('stk__list'), R = rem();
+    cs.forEach((c, i) => { const base = svc ? R * (innerWidth < 768 ? 4.6 : 6) + i * R * (innerWidth < 768 ? .8 : 1.4) : Math.min(i, 4) * 10;
+      const t = Math.min(base, innerHeight - c.offsetHeight - (svc ? R : 0)); c.style.top = t + 'px'; c._t = t; });
+  });
+  sizeDecks(); addEventListener('resize', sizeDecks); addEventListener('load', sizeDecks);
+  if (window.ResizeObserver) new ResizeObserver(sizeDecks).observe(document.body);
 
   const sizeStripes = () => stripes.forEach(s => {
     const track = $('.stripes__track', s), extra = Math.max(0, track.scrollWidth - innerWidth);
-    s.style.height = (innerHeight + extra) + 'px'; s._extra = extra;
+    s.style.height = (innerHeight + extra * (+s.dataset.speed || 1)) + 'px'; s._extra = extra;     // data-speed < 1: the track moves faster than the page
   });
   sizeStripes(); addEventListener('resize', sizeStripes); addEventListener('load', sizeStripes);
 
   const prog = el => { const r = el.getBoundingClientRect(); return clamp(-r.top / Math.max(1, r.height - innerHeight)); };
   function tick() {
     const H = innerHeight, y = scrollY;
-    if (nav) { nav.classList.toggle('is-scrolled', y > 40); if (lightEl) nav.classList.toggle('on-light', (() => { const r = lightEl.getBoundingClientRect(); return r.top < 60 && r.bottom > 60; })()); if (!root.classList.contains('menu-open')) nav.classList.toggle('is-hidden', y > lastY + 4 && y > H * .6); if (y < lastY - 4) nav.classList.remove('is-hidden'); }
+    if (nav) { nav.classList.toggle('is-scrolled', y > 40); if (!root.classList.contains('menu-open')) nav.classList.toggle('is-hidden', y > lastY + 4 && y > H * .6); if (y < lastY - 4) nav.classList.remove('is-hidden'); }
     lastY = y;
     heroes.forEach(h => {
       const p = prog(h), copy = $('[data-hero-copy]', h) || $('.phero__copy', h), hint = $('[data-hero-hint]', h), ring = $('[data-hero-ring]', h);
-      if (copy) { const o = h.classList.contains('hero') ? 1 - smooth(clamp(p / .2)) : 1 - smooth(clamp((p - .35) / .45)); copy.style.opacity = o; copy.style.transform = `translateY(${(1 - o) * -30}px) scale(${1 + (1 - o) * .22})`; copy.style.filter = o < .99 ? `blur(${(1 - o) * 6}px)` : ''; }
+      if (copy) { const o = h.classList.contains('hero') ? 1 - smooth(clamp(p / .2)) : 1 - smooth(clamp(-h.getBoundingClientRect().top / (H * .5))); copy.style.opacity = o; copy.style.transform = `translateY(${(1 - o) * -30}px) scale(${1 + (1 - o) * .22})`; copy.style.filter = o < .99 ? `blur(${(1 - o) * 6}px)` : ''; }
       if (hint) hint.style.opacity = 1 - clamp(p / .08);
       if (ring) { const o = smooth(clamp((p - .6) / .14)) * (1 - smooth(clamp((p - .93) / .07))); ring.style.opacity = o; }
     });
@@ -86,11 +105,17 @@
       const p = clamp((H * .82 - r.top) / (r.height + H * .25)), n = Math.round(p * ws.length * 1.1);
       ws.forEach((w, i) => w.classList.toggle('off', i >= n));
     });
-    stripes.forEach(s => { const track = $('.stripes__track', s), p = prog(s); track.style.transform = `translate3d(${-p * (s._extra || 0)}px,0,0)`; });
+    stripes.forEach(s => {
+      const track = s._tr || (s._tr = $('.stripes__track', s)), p = prog(s); track.style.transform = `translate3d(${-p * (s._extra || 0)}px,0,0)`;
+      const r = s.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
+      // a lens across the track: the piece in the middle is fully lit, its picture drifts against the motion (parallax)
+      (s._p || (s._p = $$('.piece', s))).forEach(pc => { const b = pc.getBoundingClientRect(), f = clamp((b.left + b.width / 2 - innerWidth / 2) / (innerWidth * .6), -1.4, 1.4);
+        pc.style.setProperty('--f', f.toFixed(3)); pc.style.setProperty('--fa', Math.min(1, Math.abs(f)).toFixed(3)); });
+    });
     takeovers.forEach(t => {
       const p = prog(t), open = smooth(clamp(p / .55)), cap = smooth(clamp((p - .5) / .2)) * (1 - smooth(clamp((p - .92) / .08)));
       t.style.setProperty('--cy', `${(1 - open) * 18}%`); t.style.setProperty('--cx', `${(1 - open) * (innerWidth < 768 ? 10 : 26)}%`);
-      t.style.setProperty('--sc', (1.14 - open * .14).toFixed(3)); t.style.setProperty('--cap', cap.toFixed(3));
+      t.style.setProperty('--sc', (1.14 - open * .14).toFixed(3)); t.style.setProperty('--cap', cap.toFixed(3)); t.style.setProperty('--rr', ((1 - open) * 24).toFixed(1) + 'px');
     });
     cuffs.forEach(c => { const p = prog(c); c.style.setProperty('--c', (smooth(clamp((p - .06) / .2)) * (1 - smooth(clamp((p - .86) / .12)))).toFixed(3)); });
     orbits.forEach(o => {
@@ -112,6 +137,10 @@
       const p = prog(a), cols = a._c || (a._c = $$('.awards__col', a)); a.classList.toggle('in', p > .04);
       if (innerWidth < 768) return;
       cols.forEach((c, k) => { const h = c.scrollHeight, travel = Math.max(0, h - innerHeight * .92) * (1 + k * .22); c.style.setProperty('--y', (-p * travel).toFixed(1)); });
+      const r = a.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
+      // a lens on the cabinet: the trophies crossing the middle of the screen come forward, the ones at the edges sink back
+      (a._aw || (a._aw = $$('.award', a))).forEach(w => { const b = w.getBoundingClientRect(), f = clamp(Math.abs(b.top + b.height / 2 - H * .52) / (H * .55));
+        w.style.setProperty('--f', (1.04 - f * f * .16).toFixed(3)); w.style.setProperty('--o', (1 - f * f * .55).toFixed(3)); });
     });
     pmaps.forEach(m => {     // design 2's face study, same beats: words, face, steps, proportion lines, markers, then the panel
       const p = prog(m), words = m._w || (m._w = $$('.pmap__words div', m));
@@ -148,6 +177,12 @@
     });
     heritage.forEach(h => { const r = h.getBoundingClientRect(); const g = smooth(clamp((H * .7 - r.top) / (H * .9))); h.style.setProperty('--g', g.toFixed(3)); });
     looks.forEach(l => { const r = l.getBoundingClientRect(); const p = clamp((H - r.top) / (H + r.height)); l.style.setProperty('--sc', (1.12 - p * .1).toFixed(3)); });
+    pars.forEach(el => { const r = el.getBoundingClientRect(); if (r.bottom < -50 || r.top > H + 50) return; el.style.setProperty('--py', (clamp((r.top + r.height / 2 - H / 2) / (H / 2 + r.height / 2), -1, 1) * -5).toFixed(2)); });
+    decks.forEach(dk => {
+      const cs = dk._c; if (!cs) return; const r = dk.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
+      cs.forEach((c, i) => { const nx = cs[i + 1]; if (!nx) return; const nt = nx.getBoundingClientRect().top;
+        c.style.setProperty('--q', clamp((H - nt) / Math.max(1, H - (nx._t || 0))).toFixed(3)); });
+    });
   }
   let ticking = false;
   const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { tick(); ticking = false; }); } };
@@ -173,19 +208,21 @@
     }));
   });
 
-  /* ---------- scroll film: the pinned stage plays the camera move frame by frame as you scroll ----------
+  /* ---------- scroll films: each pinned stage plays one scene frame by frame as you scroll ----------
+     The home page has five, one per scene, with ordinary sections between them; all read from the same numbered frame
+     sequence (data-f0 = this film's first frame, data-n = how many).
      Smoothness comes from three things (the same recipe as pear.no): frames are fetched nearest-first around where the
      reader is, a window of frames around the current one is kept DECODED as ImageBitmaps so a draw never waits on a
      decode, and the canvas is sized to the source frame, not to the Retina viewport, so each draw is a cheap blit. */
   $$('[data-sfilm]').forEach(sf => {
-    const n = +sf.dataset.n, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d', { alpha: false }), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
+    const n = +sf.dataset.n, f0 = +sf.dataset.f0 || 0, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d', { alpha: false }), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
     const pick = () => (innerWidth < 768 && innerHeight > innerWidth ? 'm' : 'd');
     const WIN = 40, PAR = 8;
     // Frames arrive as Blobs (fetch) and are decoded with createImageBitmap(blob), which decodes off the main thread, so
     // neither loading nor decoding can stall a scroll frame. Only a window of frames around the reader is kept decoded
     // (GPU bitmaps); the rest stay as small compressed blobs until the reader gets near.
     let set = pick(), blobs, bmps, pending, tries, gen = 0, cur = 0, shown = -1, visible = false, raf = 0, aim = 0, queue = [], inflight = 0;
-    const src = i => `${sf.dataset.base}${set}/${String(i + 1).padStart(4, '0')}.webp`;
+    const src = i => `${sf.dataset.base}${set}/${String(f0 + i + 1).padStart(4, '0')}.webp`;
     const reset = () => { if (bmps) bmps.forEach(b => b && b.close && b.close()); blobs = new Array(n); bmps = new Array(n); pending = new Uint8Array(n); tries = new Uint8Array(n); queue = []; inflight = 0; shown = -1; gen++; };
     reset();
     // fetch order: the frame under the reader first, then outward, then a coarse-to-fine sweep of everything else
@@ -206,7 +243,10 @@
     };
     let started = false;
     const load = () => { if (started) return; started = true; queue = order(); pump(); };
+    let near = false;     // only the films near the reader keep decoded frames (each frame is several MB of GPU memory)
+    const drop = () => { for (let i = 0; i < n; i++) if (bmps[i]) { if (bmps[i].close) bmps[i].close(); bmps[i] = null; } shown = -1; };
     const warm = () => {
+      if (!near) return;
       const g = gen, lo = Math.max(0, cur - WIN), hi = Math.min(n - 1, cur + WIN);
       for (let d = 0; d <= WIN; d++) for (const i of (d ? [cur + d, cur - d] : [cur])) {
         if (i < lo || i > hi || !blobs[i] || bmps[i]) continue;
@@ -258,10 +298,13 @@
       if (Math.abs(pos - shown) > .002) draw(pos);
       chs.forEach(c => c.classList.toggle('on', p >= +c.dataset.from && p <= +c.dataset.to));
       bar.style.transform = `scaleX(${p.toFixed(4)})`; sf.style.setProperty('--p', p.toFixed(4));
+      // fade in as the stage rises into view and out as it leaves, so each film dissolves into the page around it
+      sf.style.setProperty('--vis', Math.min(smooth(clamp(1 - r.top / (innerHeight * .85))), smooth(clamp(r.bottom / (innerHeight * .85)))).toFixed(3));
       if (hand) sf.style.setProperty('--hand', smooth(clamp((p - +hand.dataset.from) / Math.max(.001, +hand.dataset.to - +hand.dataset.from))).toFixed(3));
       if (visible) raf = requestAnimationFrame(loop);
     };
     new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) load(); }), { rootMargin: '250% 0px' }).observe(sf);
+    new IntersectionObserver(es => es.forEach(e => { near = e.isIntersecting; near ? warm() : drop(); }), { rootMargin: '120% 0px' }).observe(sf);
     new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (visible && !raf) { size(); raf = requestAnimationFrame(loop); } }), { rootMargin: '10% 0px' }).observe(sf);
     addEventListener('resize', () => { const s2 = pick(); if (s2 !== set) { set = s2; reset(); started = false; if (visible) load(); } size(); });
     // the first frame paints from the poster <img> until the decoded film is ready
