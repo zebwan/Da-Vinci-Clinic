@@ -15,6 +15,7 @@
   const startLenis = () => {
     if (reduced || !window.Lenis || lenis) return;
     lenis = new window.Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: .9 });
+    lenis.updateClassName = () => {};     // Lenis rewrites the <html> class on every scroll start/stop; nothing styles those classes
     const raf = t => { lenis.raf(t); requestAnimationFrame(raf); };
     requestAnimationFrame(raf);
   };
@@ -89,99 +90,130 @@
   });
   sizeStripes(); addEventListener('resize', sizeStripes); addEventListener('load', sizeStripes);
 
-  const prog = el => { const r = el.getBoundingClientRect(); return clamp(-r.top / Math.max(1, r.height - innerHeight)); };
+  // awards columns: their content height only changes on resize/load, so measure it then, never inside the scroll loop
+  const sizeAwards = () => awardsEls.forEach(a => $$('.awards__col', a).forEach(c => { c._h = c.scrollHeight; }));
+  sizeAwards(); addEventListener('resize', sizeAwards); addEventListener('load', sizeAwards);
+
+  // put(): write a style only when it changed. Redundant writes still invalidate styles, and on a long page that adds up.
+  const put = (el, k, v) => { const c = el._v || (el._v = {}); if (c[k] === v) return; c[k] = v; if (k[0] === '-') el.style.setProperty(k, v); else el.style[k] = v; };
+  const geo = new Map();
+  const R = el => geo.get(el) || el.getBoundingClientRect();
+  const prog = el => { const r = R(el); return clamp(-r.top / Math.max(1, r.height - innerHeight)); };
+  const near = (r, H, m = 0) => r && r.bottom > -m && r.top < H + m;
+  const TRACK = [...heroes, ...manifestos, ...stripes, ...takeovers, ...cuffs, ...orbits, ...studies, ...awardsEls, ...pmaps, ...chapters, ...scenes, ...heritage, ...looks, ...pars, ...decks];
   function tick() {
-    const H = innerHeight, y = scrollY;
+    const H = innerHeight, W = innerWidth, y = scrollY;
+    // READ first: every position this frame needs is measured before anything is written. Reading after a write forces the
+    // browser to recalculate styles and layout on the spot, and doing that over and over inside one frame is what stuttered.
+    geo.clear();
+    for (const el of TRACK) geo.set(el, el.getBoundingClientRect());
+    for (const s of stripes) if (near(geo.get(s), H)) for (const pc of s._p || (s._p = $$('.piece', s))) geo.set(pc, pc.getBoundingClientRect());
+    if (W >= 768) for (const a of awardsEls) if (near(geo.get(a), H)) for (const w of a._aw || (a._aw = $$('.award', a))) geo.set(w, w.getBoundingClientRect());
+    for (const dk of decks) if (dk._c && near(geo.get(dk), H)) for (const c of dk._c) geo.set(c, c.getBoundingClientRect());
+    // ...then WRITE
     if (nav) { nav.classList.toggle('is-scrolled', y > 40); if (!root.classList.contains('menu-open')) nav.classList.toggle('is-hidden', y > lastY + 4 && y > H * .6); if (y < lastY - 4) nav.classList.remove('is-hidden'); }
     lastY = y;
     heroes.forEach(h => {
-      const p = prog(h), copy = $('[data-hero-copy]', h) || $('.phero__copy', h), hint = $('[data-hero-hint]', h), ring = $('[data-hero-ring]', h);
-      if (copy) { const o = h.classList.contains('hero') ? 1 - smooth(clamp(p / .2)) : 1 - smooth(clamp(-h.getBoundingClientRect().top / (H * .5))); copy.style.opacity = o; copy.style.transform = `translateY(${(1 - o) * -30}px) scale(${1 + (1 - o) * .22})`; copy.style.filter = o < .99 ? `blur(${(1 - o) * 6}px)` : ''; }
-      if (hint) hint.style.opacity = 1 - clamp(p / .08);
-      if (ring) { const o = smooth(clamp((p - .6) / .14)) * (1 - smooth(clamp((p - .93) / .07))); ring.style.opacity = o; }
+      const r = geo.get(h); if (!near(r, H, H)) return;
+      const p = prog(h), copy = h._cp !== undefined ? h._cp : (h._cp = $('[data-hero-copy]', h) || $('.phero__copy', h)), hint = h._hn !== undefined ? h._hn : (h._hn = $('[data-hero-hint]', h)), ring = h._rg !== undefined ? h._rg : (h._rg = $('[data-hero-ring]', h));
+      if (copy) { const o = h.classList.contains('hero') ? 1 - smooth(clamp(p / .2)) : 1 - smooth(clamp(-r.top / (H * .5))); put(copy, 'opacity', o.toFixed(3)); put(copy, 'transform', `translate3d(0,${((1 - o) * -30).toFixed(1)}px,0) scale(${(1 + (1 - o) * .22).toFixed(3)})`); }
+      if (hint) put(hint, 'opacity', (1 - clamp(p / .08)).toFixed(3));
+      if (ring) put(ring, 'opacity', (smooth(clamp((p - .6) / .14)) * (1 - smooth(clamp((p - .93) / .07)))).toFixed(3));
     });
     manifestos.forEach(m => {
-      const r = m.getBoundingClientRect(), ws = m._ws || (m._ws = $$('.w', m));
-      const p = clamp((H * .82 - r.top) / (r.height + H * .25)), n = Math.round(p * ws.length * 1.1);
-      ws.forEach((w, i) => w.classList.toggle('off', i >= n));
+      const r = geo.get(m); if (!near(r, H, H * .3)) return;
+      const ws = m._ws || (m._ws = $$('.w', m)), n = Math.round(clamp((H * .82 - r.top) / (r.height + H * .25)) * ws.length * 1.1);
+      if (m._n !== n) { m._n = n; ws.forEach((w, i) => w.classList.toggle('off', i >= n)); }
     });
     stripes.forEach(s => {
-      const track = s._tr || (s._tr = $('.stripes__track', s)), p = prog(s); track.style.transform = `translate3d(${-p * (s._extra || 0)}px,0,0)`;
-      const r = s.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
+      const track = s._tr || (s._tr = $('.stripes__track', s)), x = -prog(s) * (s._extra || 0), dx = x - (s._x || 0); s._x = x;
+      put(track, 'transform', `translate3d(${x.toFixed(1)}px,0,0)`);
+      if (!near(geo.get(s), H)) return;
       // a lens across the track: the piece in the middle is fully lit, its picture drifts against the motion (parallax)
-      (s._p || (s._p = $$('.piece', s))).forEach(pc => { const b = pc.getBoundingClientRect(), f = clamp((b.left + b.width / 2 - innerWidth / 2) / (innerWidth * .6), -1.4, 1.4);
-        pc.style.setProperty('--f', f.toFixed(3)); pc.style.setProperty('--fa', Math.min(1, Math.abs(f)).toFixed(3)); });
+      s._p.forEach(pc => { const b = geo.get(pc); if (!b) return; const f = clamp((b.left + dx + b.width / 2 - W / 2) / (W * .6), -1.4, 1.4), im = pc._im !== undefined ? pc._im : (pc._im = $('.piece__media img', pc));
+        put(pc, 'opacity', (1 - Math.min(1, Math.abs(f)) * .3).toFixed(3)); if (im) put(im, 'translate', `${(f * -4.5).toFixed(2)}% 0`); });
     });
-    takeovers.forEach(t => {
+    takeovers.forEach(t => {     // the window opening to full screen: transforms only (a clip-path redrawn every frame was too heavy)
+      if (!near(geo.get(t), H, H)) return;
       const p = prog(t), open = smooth(clamp(p / .55)), cap = smooth(clamp((p - .5) / .2)) * (1 - smooth(clamp((p - .92) / .08)));
-      t.style.setProperty('--cy', `${(1 - open) * 18}%`); t.style.setProperty('--cx', `${(1 - open) * (innerWidth < 768 ? 10 : 26)}%`);
-      t.style.setProperty('--sc', (1.14 - open * .14).toFixed(3)); t.style.setProperty('--cap', cap.toFixed(3)); t.style.setProperty('--rr', ((1 - open) * 24).toFixed(1) + 'px');
+      const sx = 1 - (1 - open) * (W < 768 ? .2 : .52), sy = 1 - (1 - open) * .36, sc = 1.14 - open * .14;
+      const fig = t._f || (t._f = $('.takeover__fig', t)), im = t._i || (t._i = $('.takeover__fig img', t));
+      put(fig, 'transform', `scale(${sx.toFixed(4)},${sy.toFixed(4)})`); put(fig, 'borderRadius', open > .995 ? '0px' : `${Math.round(24 / sx)}px / ${Math.round(24 / sy)}px`);
+      if (im) put(im, 'transform', `scale(${(sc / sx).toFixed(4)},${(sc / sy).toFixed(4)})`);
+      put(t, '--cap', cap.toFixed(3));
     });
-    cuffs.forEach(c => { const p = prog(c); c.style.setProperty('--c', (smooth(clamp((p - .06) / .2)) * (1 - smooth(clamp((p - .86) / .12)))).toFixed(3)); });
+    cuffs.forEach(c => { if (near(geo.get(c), H, H)) put(c, '--c', (smooth(clamp((prog(c) - .06) / .2)) * (1 - smooth(clamp((prog(c) - .86) / .12)))).toFixed(3)); });
     orbits.forEach(o => {
+      if (!near(geo.get(o), H, H)) return;
       const p = prog(o), ring = o._ring || (o._ring = $('[data-orbit-ring]', o)), cards = o._cards || (o._cards = $$('.ocard', o)), caps = o._caps || (o._caps = $$('.orbit__cap', o)), dots = o._dots || (o._dots = $$('.orbit__dots span', o));
       const n = cards.length, intro = smooth(clamp(p / .14)), outro = smooth(clamp((p - .9) / .1)), q = clamp((p - .14) / .72);
       const ry = 30 * (1 - intro) - q * (n - 1) / n * 360;
-      ring.style.setProperty('--ry', ry.toFixed(2) + 'deg'); ring.style.setProperty('--s', (.7 + .3 * intro - .15 * outro).toFixed(3)); ring.style.setProperty('--o', (intro * (1 - .6 * outro)).toFixed(3));
-      cards.forEach((c, i) => { const f = Math.cos((i * 360 / n + ry) * Math.PI / 180); c.style.setProperty('--f', (.4 + .6 * clamp(f + .25)).toFixed(3)); c.style.setProperty('--b', (.72 + .4 * clamp(f)).toFixed(3)); });
+      put(ring, '--ry', ry.toFixed(2) + 'deg'); put(ring, '--s', (.7 + .3 * intro - .15 * outro).toFixed(3)); put(ring, '--o', (intro * (1 - .6 * outro)).toFixed(3));
+      cards.forEach((c, i) => { const f = Math.cos((i * 360 / n + ry) * Math.PI / 180); put(c, '--f', (.4 + .6 * clamp(f + .25)).toFixed(3)); put(c, '--b', (.72 + .4 * clamp(f)).toFixed(3)); });
       const i = Math.min(n - 1, Math.round(q * (n - 1)));
       caps.forEach((c, k) => c.classList.toggle('on', k === i)); dots.forEach((d, k) => d.classList.toggle('on', k === i));
     });
-    studies.forEach(s => {
+    studies.forEach(s => {     // sketch → marble: a curtain made of two opposite transforms (no per-frame clip-path repaint)
+      if (!near(geo.get(s), H, H)) return;
       const p = prog(s), q = clamp((p - .08) / .66), tags = s._tags || (s._tags = $$('.study__tag', s)), steps = s._steps || (s._steps = $$('.study__steps li', s));
-      s.style.setProperty('--q', q.toFixed(4)); s.style.setProperty('--l', q > 0 && q < 1 ? '1' : '0'); s.style.setProperty('--z', p > .82 ? '1.04' : '1');
+      const mw = s._mw || (s._mw = $('.study__mw', s)), mi = s._mi || (s._mi = $('.study__marble', s));
+      if (mw && mi) { put(mw, 'transform', `translate3d(0,${(-(1 - q) * 100).toFixed(2)}%,0)`); put(mi, 'transform', `translate3d(0,${((1 - q) * 100).toFixed(2)}%,0)`); }
+      put(s, '--q', q.toFixed(4)); put(s, '--l', q > 0 && q < 1 ? '1' : '0'); put(s, '--z', p > .82 ? '1.04' : '1');
       tags.forEach((t, i) => t.classList.toggle('on', q > .2 + i * .17));
       steps.forEach((li, i) => li.classList.toggle('on', p > i * (.78 / steps.length) + .04 && (p < (i + 1) * (.78 / steps.length) + .04 || i === steps.length - 1)));
     });
     awardsEls.forEach(a => {     // the trophy columns drift upward at three speeds while the stage is pinned
       const p = prog(a), cols = a._c || (a._c = $$('.awards__col', a)); a.classList.toggle('in', p > .04);
-      if (innerWidth < 768) return;
-      cols.forEach((c, k) => { const h = c.scrollHeight, travel = Math.max(0, h - innerHeight * .92) * (1 + k * .22); c.style.setProperty('--y', (-p * travel).toFixed(1)); });
-      const r = a.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
+      if (W < 768) return;
+      cols.forEach((c, k) => { const yy = -p * Math.max(0, (c._h || 0) - H * .92) * (1 + k * .22); c._dy = yy - (c._y || 0); c._y = yy; put(c, 'transform', `translate3d(0,${yy.toFixed(1)}px,0)`); });
+      if (!near(geo.get(a), H)) return;
       // a lens on the cabinet: the trophies crossing the middle of the screen come forward, the ones at the edges sink back
-      (a._aw || (a._aw = $$('.award', a))).forEach(w => { const b = w.getBoundingClientRect(), f = clamp(Math.abs(b.top + b.height / 2 - H * .52) / (H * .55));
-        w.style.setProperty('--f', (1.04 - f * f * .16).toFixed(3)); w.style.setProperty('--o', (1 - f * f * .55).toFixed(3)); });
+      (a._aw || []).forEach(w => { const b = geo.get(w); if (!b) return; const f = clamp(Math.abs(b.top + (w.parentElement._dy || 0) + b.height / 2 - H * .52) / (H * .55));
+        put(w, 'scale', (1.04 - f * f * .16).toFixed(3)); put(w, 'opacity', (1 - f * f * .55).toFixed(3)); });
     });
     pmaps.forEach(m => {     // design 2's face study, same beats: words, face, steps, proportion lines, markers, then the panel
+      if (!near(geo.get(m), H, H)) return;
       const p = prog(m), words = m._w || (m._w = $$('.pmap__words div', m));
       const fade = (a, b, c, d) => p < a ? 0 : p < b ? (p - a) / (b - a) : p < c ? 1 : p < d ? 1 - (p - c) / (d - c) : 0;
-      words[0].style.opacity = p < .02 ? 1 : fade(-1, 0, .08, .12); words[1].style.opacity = fade(.12, .15, .2, .24);
-      words.forEach(w => { w.style.transform = `translateY(${(1 - +w.style.opacity) * 1.2}rem)`; });
+      const w0 = p < .02 ? 1 : fade(-1, 0, .08, .12), w1 = fade(.12, .15, .2, .24);
+      [w0, w1].forEach((o, i) => { put(words[i], 'opacity', o.toFixed(3)); put(words[i], 'transform', `translateY(${((1 - o) * 1.2).toFixed(3)}rem)`); });
       const im = m._im || (m._im = $('.pmap__fig img', m));
-      im.style.opacity = p < .22 ? 0 : p < .3 ? (p - .22) / .08 * .35 : p < .38 ? .35 + (p - .3) / .08 * .65 : 1;
+      put(im, 'opacity', (p < .22 ? 0 : p < .3 ? (p - .22) / .08 * .35 : p < .38 ? .35 + (p - .3) / .08 * .65 : 1).toFixed(3));
       const g = clamp((p - .4) / .12);
-      (m._g || (m._g = $$('.pmap__fig .guide', m))).forEach((el, i) => { el.style.strokeDashoffset = 1 - clamp(g * 1.6 - i * .15); });
+      (m._g || (m._g = $$('.pmap__fig .guide', m))).forEach((el, i) => put(el, 'strokeDashoffset', (1 - clamp(g * 1.6 - i * .15)).toFixed(3)));
       m.classList.toggle('g-on', g > .5);
       (m._z || (m._z = $$('.pzone', m))).forEach((z, i) => z.classList.toggle('on', p > .54 + i * .03));
       const cap = p < .38 ? 0 : p < .52 ? 1 : p < .66 ? 2 : p < .78 ? 3 : 'z';
       (m._c || (m._c = $$('.pmap__cap p', m))).forEach(el => el.classList.toggle('on', el.dataset.i == String(cap) && p > .24));
-      const desk = innerWidth > 767;
-      (m._cb || (m._cb = $('.pmap__cap', m))).style.opacity = desk ? (cap === 'z' ? 1 : 0) : (p > .24 && p < .82 ? 1 : 0);
+      const desk = W > 767;
+      put(m._cb || (m._cb = $('.pmap__cap', m)), 'opacity', desk ? (cap === 'z' ? '1' : '0') : (p > .24 && p < .82 ? '1' : '0'));
       if (desk) {     // the steps stay on screen and build up side by side; the newest one carries the gold rule
         const st = m._st || (m._st = $$('.pstep', m)), row = m._row || (m._row = $('.pmap__steps', m)), th = [.24, .38, .52, .66];
         st.forEach((li, i) => { li.classList.toggle('in', p >= th[i]); li.classList.toggle('cur', cap === i); });
-        row.style.setProperty('--se', p >= .24 ? 1 : 0); row.style.setProperty('--so', (1 - smooth(clamp((p - .76) / .05))).toFixed(3));
+        put(row, '--se', p >= .24 ? '1' : '0'); put(row, '--so', (1 - smooth(clamp((p - .76) / .05))).toFixed(3));
       }
       const open = clamp((p - .8) / .1), stage = m._s || (m._s = $('.pmap__stage', m));
-      if (innerWidth > 767) { stage.style.gridTemplateColumns = `1fr ${open * 39}vw`; stage.style.gridTemplateRows = ''; }
-      else { stage.style.gridTemplateRows = `1fr ${open * 62}svh`; stage.style.gridTemplateColumns = ''; }
+      if (desk) { put(stage, 'gridTemplateColumns', `1fr ${(open * 39).toFixed(2)}vw`); put(stage, 'gridTemplateRows', ''); }
+      else { put(stage, 'gridTemplateRows', `1fr ${(open * 62).toFixed(2)}svh`); put(stage, 'gridTemplateColumns', ''); }
     });
     chapters.forEach(c => {
+      if (!near(geo.get(c), H, H)) return;
       const p = prog(c), items = c._it || (c._it = $$('.chapter__item', c)), i = Math.min(items.length - 1, Math.floor(p * items.length * .999));
-      items.forEach((el, k) => el.classList.toggle('on', k === i)); c.style.setProperty('--p', p.toFixed(4));
+      items.forEach((el, k) => el.classList.toggle('on', k === i)); put(c._pb || (c._pb = $('.chapter__progress span', c)) || c, 'transform', `scaleX(${p.toFixed(4)})`);
     });
     scenes.forEach(s => {
+      if (!near(geo.get(s), H, H)) return;
       const p = prog(s), t = s._t || (s._t = $$('.scenes__title > div', s)), n = t.length, i = Math.min(n - 1, Math.floor(p * n * .999));
       const local = p * n - i, show = n === 1 || (local > .12 || i === 0) && (local < .9 || i === n - 1);
-      t.forEach((el, k) => el.classList.toggle('on', k === i && show)); s.style.setProperty('--p', p.toFixed(4)); s._i = i;
+      t.forEach((el, k) => el.classList.toggle('on', k === i && show)); put(s._pb || (s._pb = $('.scenes__line span', s)) || s, 'transform', `scaleX(${p.toFixed(4)})`); s._i = i;
     });
-    heritage.forEach(h => { const r = h.getBoundingClientRect(); const g = smooth(clamp((H * .7 - r.top) / (H * .9))); h.style.setProperty('--g', g.toFixed(3)); });
-    looks.forEach(l => { const r = l.getBoundingClientRect(); const p = clamp((H - r.top) / (H + r.height)); l.style.setProperty('--sc', (1.12 - p * .1).toFixed(3)); });
-    pars.forEach(el => { const r = el.getBoundingClientRect(); if (r.bottom < -50 || r.top > H + 50) return; el.style.setProperty('--py', (clamp((r.top + r.height / 2 - H / 2) / (H / 2 + r.height / 2), -1, 1) * -5).toFixed(2)); });
+    heritage.forEach(h => { const r = geo.get(h); if (near(r, H, H)) put(h, '--g', smooth(clamp((H * .7 - r.top) / (H * .9))).toFixed(3)); });
+    looks.forEach(l => { const r = geo.get(l); if (near(r, H, H)) put(l, '--sc', (1.12 - clamp((H - r.top) / (H + r.height)) * .1).toFixed(3)); });
+    pars.forEach(el => { const r = geo.get(el); if (!near(r, H, 50)) return; const im = el._im !== undefined ? el._im : (el._im = $('img', el));
+      if (im) put(im, 'translate', `0 ${(clamp((r.top + r.height / 2 - H / 2) / (H / 2 + r.height / 2), -1, 1) * -5).toFixed(2)}%`); });
     decks.forEach(dk => {
-      const cs = dk._c; if (!cs) return; const r = dk.getBoundingClientRect(); if (r.bottom < 0 || r.top > H) return;
-      cs.forEach((c, i) => { const nx = cs[i + 1]; if (!nx) return; const nt = nx.getBoundingClientRect().top;
-        c.style.setProperty('--q', clamp((H - nt) / Math.max(1, H - (nx._t || 0))).toFixed(3)); });
+      const cs = dk._c; if (!cs || !near(geo.get(dk), H)) return;
+      cs.forEach((c, i) => { const nx = cs[i + 1]; put(c, '--q', nx ? clamp((H - geo.get(nx).top) / Math.max(1, H - (nx._t || 0))).toFixed(3) : '0'); });
     });
   }
   let ticking = false;
@@ -217,7 +249,7 @@
   $$('[data-sfilm]').forEach(sf => {
     const n = +sf.dataset.n, f0 = +sf.dataset.f0 || 0, cv = $('.sfilm__canvas', sf), ctx = cv.getContext('2d', { alpha: false }), chs = $$('.sfilm__ch', sf), bar = $('.sfilm__bar span', sf);
     const pick = () => (innerWidth < 768 && innerHeight > innerWidth ? 'm' : 'd');
-    const WIN = 40, PAR = 8;
+    const WIN = 24, PAR = 6;     // ±24 decoded frames (each is several MB of memory: 40 per side, times several films, was too much)
     // Frames arrive as Blobs (fetch) and are decoded with createImageBitmap(blob), which decodes off the main thread, so
     // neither loading nor decoding can stall a scroll frame. Only a window of frames around the reader is kept decoded
     // (GPU bitmaps); the rest stay as small compressed blobs until the reader gets near.
@@ -243,10 +275,10 @@
     };
     let started = false;
     const load = () => { if (started) return; started = true; queue = order(); pump(); };
-    let near = false;     // only the films near the reader keep decoded frames (each frame is several MB of GPU memory)
+    let inReach = false;     // only the films near the reader keep decoded frames (each frame is several MB of GPU memory)
     const drop = () => { for (let i = 0; i < n; i++) if (bmps[i]) { if (bmps[i].close) bmps[i].close(); bmps[i] = null; } shown = -1; };
     const warm = () => {
-      if (!near) return;
+      if (!inReach) return;
       const g = gen, lo = Math.max(0, cur - WIN), hi = Math.min(n - 1, cur + WIN);
       for (let d = 0; d <= WIN; d++) for (const i of (d ? [cur + d, cur - d] : [cur])) {
         if (i < lo || i > hi || !blobs[i] || bmps[i]) continue;
@@ -269,18 +301,19 @@
       if (set === 'm') { const s = Math.max(W / iw, .56 * H / ih), w = iw * s, h = ih * s; return [(W - w) / 2, Math.max(0, H * .4 - h / 2), w, h]; }
       const s = Math.max(W / iw, H / ih), w = iw * s, h = ih * s; return [(W - w) / 2, (H - h) / 2, w, h];
     };
-    const put = (im, a) => { if (!im || a <= .002) return; const [x, y, w, h] = rect(im); ctx.globalAlpha = Math.min(1, a); ctx.drawImage(im, x, y, w, h); ctx.globalAlpha = 1; };
+    const blit = (im, a) => { if (!im || a <= .002) return; const [x, y, w, h] = rect(im); ctx.globalAlpha = Math.min(1, a); ctx.drawImage(im, x, y, w, h); ctx.globalAlpha = 1; };
     // The film is drawn at a FRACTIONAL frame position: frame A, with frame A+1 laid over it at the fraction we are between
     // them (pear.no blends two textures the same way). Without this, a slow scroll holds one frame for several screen
     // refreshes and then jumps, which reads as stutter however fast the frames load.
     const draw = pos => {
-      const A = Math.floor(pos); let t = pos - A, ia = frameOf(A);
+      // scrolling fast (more than a frame per screen refresh) the blend is invisible: draw one frame, upload one texture
+      const fast = Math.abs(pos - shown) > 1.5, A = fast ? Math.round(pos) : Math.floor(pos); let t = fast ? 0 : pos - A, ia = frameOf(A);
       if (!ia) { const k = nearest(A); if (k < 0) return; ia = frameOf(k); t = 0; }
       const ib = t > .004 ? frameOf(A + 1) : null, W = cv.width, H = cv.height;
       if (set === 'm') { ctx.fillStyle = '#06111f'; ctx.fillRect(0, 0, W, H); }
       const sc = scenes.find(s0 => pos >= s0 - 1 && pos < s0 + XF);
-      if (sc !== undefined) { const x = clamp((pos - sc + 1) / XF); put(frameOf(nearest(sc - 1)), 1); put(ia, x); put(ib, x * t); }   // a new scene fades in over the last frame of the previous one
-      else { put(ia, 1); put(ib, t); }
+      if (sc !== undefined) { const x = clamp((pos - sc + 1) / XF); blit(frameOf(nearest(sc - 1)), 1); blit(ia, x); blit(ib, x * t); }   // a new scene fades in over the last frame of the previous one
+      else { blit(ia, 1); blit(ib, t); }
       if (set === 'm') {     // phones: the 4:5 film fills the width, sits in the upper part, and feathers into the navy above and below
         const [, y, , h] = rect(ia), f = h * .14;
         const top = ctx.createLinearGradient(0, y, 0, y + f); top.addColorStop(0, '#06111f'); top.addColorStop(1, 'rgba(6,17,31,0)'); ctx.fillStyle = top; ctx.fillRect(0, y, W, f);
@@ -288,23 +321,28 @@
       }
       shown = pos; sf.classList.add('is-ready');
     };
-    const hand = $('.sfilm__hand', sf);
+    const hand = $('.sfilm__hand', sf), stage = $('.sfilm__stage', sf), hint = $('.sfilm__hint', sf);
+    // the section's place on the page, measured on load/resize only: reading it from the layout every frame forced a style
+    // recalculation whenever anything else had just written a style
+    const measure = () => { sf._top = sf.getBoundingClientRect().top + scrollY; sf._h = sf.offsetHeight; };
+    measure(); addEventListener('resize', measure); addEventListener('load', measure); if (window.ResizeObserver) new ResizeObserver(measure).observe(document.body);
     const loop = () => {
       // progress from Lenis's own (fractional) scroll value: the page's scrollY is rounded to whole pixels, so at a slow scroll
       // it moves on some display frames and not others; the animated value moves on every one
-      raf = 0; const r = sf.getBoundingClientRect(), y = lenis ? lenis.animatedScroll : scrollY, top = r.top + scrollY;
-      const p = clamp((y - top) / Math.max(1, r.height - innerHeight)), pos = p * (n - 1), f = Math.round(pos);      // direct: the scroll is already smoothed by Lenis; a second easing only adds lag
+      raf = 0; const y = lenis ? lenis.animatedScroll : scrollY, H = innerHeight, rt = sf._top - y, rb = rt + sf._h;
+      const p = clamp((y - sf._top) / Math.max(1, sf._h - H)), pos = p * (n - 1), f = Math.round(pos);      // direct: the scroll is already smoothed by Lenis; a second easing only adds lag
       if (f !== cur) { cur = f; aim = f; warm(); }
       if (Math.abs(pos - shown) > .002) draw(pos);
       chs.forEach(c => c.classList.toggle('on', p >= +c.dataset.from && p <= +c.dataset.to));
-      bar.style.transform = `scaleX(${p.toFixed(4)})`; sf.style.setProperty('--p', p.toFixed(4));
+      put(bar, 'transform', `scaleX(${p.toFixed(4)})`);
+      if (hint) put(hint, 'opacity', (1 - clamp(p * 12)).toFixed(3));
       // fade in as the stage rises into view and out as it leaves, so each film dissolves into the page around it
-      sf.style.setProperty('--vis', Math.min(smooth(clamp(1 - r.top / (innerHeight * .85))), smooth(clamp(r.bottom / (innerHeight * .85)))).toFixed(3));
-      if (hand) sf.style.setProperty('--hand', smooth(clamp((p - +hand.dataset.from) / Math.max(.001, +hand.dataset.to - +hand.dataset.from))).toFixed(3));
+      put(stage, 'opacity', Math.min(smooth(clamp(1 - rt / (H * .85))), smooth(clamp(rb / (H * .85)))).toFixed(3));
+      if (hand) put(sf, '--hand', smooth(clamp((p - +hand.dataset.from) / Math.max(.001, +hand.dataset.to - +hand.dataset.from))).toFixed(3));
       if (visible) raf = requestAnimationFrame(loop);
     };
-    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) load(); }), { rootMargin: '250% 0px' }).observe(sf);
-    new IntersectionObserver(es => es.forEach(e => { near = e.isIntersecting; near ? warm() : drop(); }), { rootMargin: '120% 0px' }).observe(sf);
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) load(); }), { rootMargin: '160% 0px' }).observe(sf);
+    new IntersectionObserver(es => es.forEach(e => { inReach = e.isIntersecting; inReach ? warm() : drop(); }), { rootMargin: '70% 0px' }).observe(sf);
     new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (visible && !raf) { size(); raf = requestAnimationFrame(loop); } }), { rootMargin: '10% 0px' }).observe(sf);
     addEventListener('resize', () => { const s2 = pick(); if (s2 !== set) { set = s2; reset(); started = false; if (visible) load(); } size(); });
     // the first frame paints from the poster <img> until the decoded film is ready
