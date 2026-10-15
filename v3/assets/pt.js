@@ -35,7 +35,7 @@ function start() {
   const N = phone ? 24000 : (innerWidth < 1100 ? 36000 : 52000);
   // opaque canvas: the navy backdrop is drawn here too, so additive points never punch dark holes into the page
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
-  const dpr = Math.min(devicePixelRatio || 1, phone ? 1.6 : 1.75);
+  const dpr = Math.min(devicePixelRatio || 1, phone ? 1.3 : 1.25);     // soft glowing points: a lower buffer resolution is invisible, and halves the fill work on Retina
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x040a13, 1);
   const scene = new THREE.Scene();
