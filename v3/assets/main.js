@@ -404,7 +404,7 @@
     const P = $('.fm__trail', m).getAttribute('points').trim().split(/\s+/).map(q => q.split(',').map(Number));
     const cum = [0]; for (let i = 1; i < N; i++) cum.push(cum[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
     const total = cum[N - 1]; line.style.strokeDasharray = `${total} ${total}`; line.style.strokeDashoffset = total;
-    const T0 = .05, T1 = .95, HOLD = .4;      // first and last point; share of each step spent holding still on a point
+    const T0 = .05, T1 = .95, HOLD = .55;     // first and last point; share of each step spent holding still on a point (the text rests, then rolls)
     const at = i => T0 + i * (T1 - T0) / (N - 1);
     let last = '';
     const update = () => {
