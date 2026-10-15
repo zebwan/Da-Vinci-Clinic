@@ -315,12 +315,12 @@ em{font-style:italic;color:var(--gold-hi)}
 .fm__dot::after{content:"";position:absolute;inset:-.45rem;border-radius:50%;border:1px solid rgba(232,207,148,.6);opacity:0;transform:scale(.6);transition:opacity .5s,transform .6s var(--ease)}
 .fm__dot.on{background:var(--gold-hi);box-shadow:none}
 .fm__dot.cur{transform:scale(1.15)}.fm__dot.cur::after{opacity:1;transform:none}
-.fm__drum{grid-column:2;grid-row:2;align-self:start;position:relative;height:clamp(15rem,34svh,19rem);margin-top:clamp(1.4rem,4svh,2.6rem);
-  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 24%,#000 76%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 24%,#000 76%,transparent 100%)}
+.fm__drum{grid-column:2;grid-row:2;align-self:start;position:relative;height:clamp(21rem,42svh,23rem);margin-top:clamp(.6rem,2svh,1.4rem);--fz:2.2rem;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 var(--fz),#000 calc(100% - var(--fz)),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 var(--fz),#000 calc(100% - var(--fz)),transparent 100%)}
 .fm__it{position:absolute;left:0;right:0;top:50%;display:flex;flex-direction:column;gap:.7rem;max-width:32rem;transform-origin:50% 50%;will-change:transform,opacity;opacity:0;pointer-events:none}
 .fm__it.cur{pointer-events:auto}
 .fm__it h3{font-family:var(--serif);font-weight:400;font-size:clamp(1.8rem,3vw,2.7rem);line-height:1.05}
-.fm__it p{color:var(--mute);line-height:1.65;font-size:.95rem}
+.fm__it p{color:var(--mute);line-height:1.65;font-size:.95rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .fm__it .link{align-self:flex-start}
 
 /* image wipes: card pictures reveal from the top as they enter (competitor mock's wipe) */
@@ -721,11 +721,11 @@ em{font-style:italic;color:var(--gold-hi)}
   .ltabs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pmq__it span{font-size:.8rem}
   .fm{height:calc(100svh + var(--n,7) * 56svh)}
-  .fm__stage{grid-template-columns:1fr;grid-template-rows:auto auto 1fr;padding:4.6rem 1.25rem 1rem;align-items:start;row-gap:.6rem}
-  .fm__head{grid-column:1;grid-row:1;align-self:start;gap:.3rem}.fm__head h2{font-size:clamp(1.6rem,7vw,2rem)}.fm__head p{display:none}
-  .fm__fig{grid-column:1;grid-row:2;height:min(46svh,26rem)}
-  .fm__drum{grid-column:1;grid-row:3;margin-top:0;height:100%;max-height:15rem}
-  .fm__it{gap:.45rem}.fm__it h3{font-size:1.6rem}.fm__it p{font-size:.86rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .fm__stage{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:4.4rem 1.25rem .6rem;align-items:start;row-gap:.4rem}
+  .fm__head{grid-column:1;grid-row:1;align-self:start;gap:.25rem}.fm__head h2{font-size:clamp(1.45rem,6.4vw,1.85rem)}.fm__head p{display:none}
+  .fm__fig{grid-column:1;grid-row:2;height:clamp(10rem,calc(100svh - 26rem),26rem)}
+  .fm__drum{grid-column:1;grid-row:3;margin-top:0;height:15.5rem;--fz:1.9rem}
+  .fm__it{gap:.4rem;right:3.9rem}.fm__it h3{font-size:1.45rem}.fm__it p{font-size:.84rem;line-height:1.55}
   .piece--wide{width:86vw}
   #doctors .piece__media{height:min(46svh,26rem)}
   .sheet .split__media{height:auto;width:100%;max-width:26rem}
