@@ -230,23 +230,23 @@ em{font-style:italic;color:var(--gold-hi)}
 .prow i{flex:none;width:2rem;height:2rem;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--gold)}
 .prow i svg{width:1rem;height:1rem}
 
-/* ---------- awards: one straight row of trophies that the scroll pulls sideways, the middle one lit (main.js) ---------- */
+/* ---------- awards: the trophy cabinet, three level columns drifting up as one while the stage is pinned (main.js) ---------- */
 .awards{position:relative;height:250svh}
-.awards__stage{position:sticky;top:0;height:100svh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:clamp(1.4rem,4svh,2.8rem);padding:clamp(5.5rem,11svh,7rem) 0 clamp(1.2rem,3svh,2rem)}
-.awards__top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(2rem,5vw,6rem);align-items:end;padding:0 var(--pad)}
-.awards__copy{display:flex;flex-direction:column;gap:1rem;max-width:34rem}
-.awards__copy h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.2rem,4vw,3.8rem);line-height:1.04}
+.awards__stage{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(2rem,5vw,6rem);align-items:center;padding:0 var(--pad)}
+.awards__copy{display:flex;flex-direction:column;gap:1.1rem;max-width:30rem;position:relative;z-index:2}
+.awards__copy h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.4rem,4.6vw,4.4rem);line-height:1.04}
 .awards__copy > p{color:var(--mute);line-height:1.7}
-.awards__copy .link{align-self:flex-start;margin-top:.2rem}
-.awards__proof{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 2rem;border-top:1px solid var(--line)}
-.awards__proof li{display:flex;flex-direction:column;gap:.25rem;padding:.8rem 0;border-bottom:1px solid var(--line);opacity:0;transform:translateY(.8rem);transition:opacity .6s,transform .8s var(--ease);transition-delay:calc(var(--i) * .08s)}
+.awards__proof{list-style:none;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.awards__proof li{display:grid;grid-template-columns:6.2rem 1fr;gap:1rem;align-items:baseline;padding:.85rem 0;border-bottom:1px solid var(--line);opacity:0;transform:translateY(.8rem);transition:opacity .6s,transform .8s var(--ease);transition-delay:calc(var(--i) * .08s)}
 .awards.in .awards__proof li{opacity:1;transform:none}
-.awards__proof b{font-family:var(--serif);font-weight:400;font-size:1.6rem;line-height:1;color:var(--gold-hi)}
-.awards__proof span{font-size:.84rem;color:var(--mute);line-height:1.45}
-.awards__row{-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
-.awards__track{display:flex;gap:clamp(.9rem,1.6vw,1.6rem);width:max-content;padding:1.2rem var(--pad);will-change:transform}
-.award{flex:0 0 auto;width:clamp(11rem,14.5vw,15rem);margin:0;display:flex;flex-direction:column;align-items:center;gap:.7rem;padding:1.2rem 1rem 1rem;border-radius:var(--r);will-change:scale,opacity;background:linear-gradient(160deg,rgba(20,48,79,.55),rgba(4,10,19,.6));box-shadow:inset 0 0 0 1px rgba(201,169,97,.2);text-align:center}
-.award img{height:clamp(6.5rem,17svh,10.5rem);width:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 18px 24px rgba(0,0,0,.5))}
+.awards__proof b{font-family:var(--serif);font-weight:400;font-size:1.7rem;line-height:1;color:var(--gold-hi)}
+.awards__proof span{font-size:.9rem;color:var(--mute);line-height:1.5}
+.awards__copy .link{align-self:flex-start;margin-top:.4rem}
+.awards__wall{position:relative;height:100svh;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(180deg,transparent,#000 14%,#000 86%,transparent)}
+.awards__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(.8rem,1.6vw,1.6rem);padding:18svh 0;will-change:transform}
+.award{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:.7rem;padding:1.2rem 1rem 1rem;border-radius:var(--r);will-change:scale,opacity;background:linear-gradient(160deg,rgba(20,48,79,.55),rgba(4,10,19,.6));box-shadow:inset 0 0 0 1px rgba(201,169,97,.2);text-align:center}
+.award:last-child:nth-child(3n+1){grid-column:2}
+.award img{height:clamp(7rem,16svh,11rem);width:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 18px 24px rgba(0,0,0,.5))}
 .award figcaption{font-size:.74rem;font-weight:600;line-height:1.35;color:var(--mute)}
 
 /* ---------- 3b orbit: a ring of arched cards that turns with the scroll ---------- */
@@ -299,31 +299,34 @@ em{font-style:italic;color:var(--gold-hi)}
 .study__steps p{font-size:.85rem;color:var(--mute);margin-top:.3rem;line-height:1.55}
 
 /* ---------- 9b face map: where would you like to begin ---------- */
-.fmap{position:relative;padding:clamp(5rem,12svh,8rem) var(--pad)}
-.fmap__head{display:flex;flex-direction:column;gap:.8rem;max-width:40rem;margin-bottom:clamp(2rem,5svh,3.5rem)}
-.fmap__head h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.4rem,5.4vw,5rem);line-height:1.02}
-.fmap__head p{color:var(--mute)}
-.fmap__grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1fr);gap:clamp(2rem,6vw,6rem);align-items:center}
-.fmap__portrait{position:relative;height:min(80svh,54rem);aspect-ratio:9/16;justify-self:center}
-.fmap__portrait > img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 40px 60px rgba(0,0,0,.45))}
-.fpin{position:absolute;left:var(--x);top:var(--y);width:2.2rem;height:2.2rem;transform:translate(-50%,-50%) scale(0);display:grid;place-items:center;border-radius:50%;opacity:0;transition:transform .5s var(--ease),opacity .4s;transition-delay:calc(var(--i) * .1s);cursor:pointer}
-.fmap.in .fpin{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.fpin i{width:.7rem;height:.7rem;border-radius:50%;background:var(--gold-hi);box-shadow:0 0 0 2px rgba(4,10,19,.6);transition:background .3s}
-.fpin::before{content:"";position:absolute;inset:0;border-radius:50%;border:1px solid var(--gold-hi);animation:fpulse 2.4s ease-out infinite;animation-delay:calc(var(--i) * .35s)}
-.fpin::after{content:"";position:absolute;inset:.4rem;border-radius:50%;border:1px solid rgba(232,207,148,.7);opacity:0;transition:opacity .3s}
-.fpin.on::after,.fpin:hover::after{opacity:1}.fpin.on i{background:#fff}
-@keyframes fpulse{to{transform:scale(2.3);opacity:0}}
-.fmap__cards{display:grid;min-height:14rem}
-.fcard{grid-area:1/1;display:flex;flex-direction:column;gap:.8rem;opacity:0;transform:translateY(1rem);transition:opacity .5s,transform .7s var(--ease);pointer-events:none;max-width:30rem}
-.fcard.on{opacity:1;transform:none;pointer-events:auto}
-.fcard h3{font-family:var(--serif);font-weight:400;font-size:clamp(1.9rem,3.4vw,3rem);line-height:1.05}
-.fcard p{color:var(--mute);line-height:1.7}
-.fcard .link{align-self:flex-start;margin-top:.4rem}
+/* face map: a long pinned stage; the scroll draws a line down the face, point to point, and the treatments roll past like a drum (main.js) */
+.fm{position:relative;height:calc(100svh + var(--n,7) * 66svh)}
+.fm__stage{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:clamp(2rem,5vw,5rem);align-items:center;padding:clamp(5.5rem,10svh,6.5rem) var(--pad) clamp(1.5rem,4svh,2.5rem)}
+.fm__head{grid-column:2;grid-row:1;align-self:end;display:flex;flex-direction:column;gap:.8rem;max-width:34rem}
+.fm__head h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.2rem,4.2vw,4rem);line-height:1.04}
+.fm__head p{color:var(--mute);font-size:.92rem;max-width:36ch}
+.fm__fig{grid-column:1;grid-row:1/3;position:relative;height:min(84svh,58rem);aspect-ratio:900/1120;justify-self:center;max-width:100%}
+.fm__fig > img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 40px 60px rgba(0,0,0,.45))}
+.fm__fig svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fm__trail,.fm__line{fill:none;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.fm__trail{stroke:rgba(232,207,148,.14);stroke-width:1;stroke-dasharray:2 6}
+.fm__line{stroke:var(--gold-hi);stroke-width:1.4;opacity:.85}
+.fm__dot{position:absolute;width:.62rem;height:.62rem;margin:-.31rem 0 0 -.31rem;border-radius:50%;background:transparent;box-shadow:inset 0 0 0 1px rgba(232,207,148,.55);transition:background .5s,box-shadow .5s,transform .6s var(--ease);cursor:pointer}
+.fm__dot::after{content:"";position:absolute;inset:-.45rem;border-radius:50%;border:1px solid rgba(232,207,148,.6);opacity:0;transform:scale(.6);transition:opacity .5s,transform .6s var(--ease)}
+.fm__dot.on{background:var(--gold-hi);box-shadow:none}
+.fm__dot.cur{transform:scale(1.15)}.fm__dot.cur::after{opacity:1;transform:none}
+.fm__drum{grid-column:2;grid-row:2;align-self:start;position:relative;height:clamp(15rem,34svh,19rem);margin-top:clamp(1.4rem,4svh,2.6rem);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 24%,#000 76%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 24%,#000 76%,transparent 100%)}
+.fm__it{position:absolute;left:0;right:0;top:50%;display:flex;flex-direction:column;gap:.7rem;max-width:32rem;transform-origin:50% 50%;will-change:transform,opacity;opacity:0;pointer-events:none}
+.fm__it.cur{pointer-events:auto}
+.fm__it h3{font-family:var(--serif);font-weight:400;font-size:clamp(1.8rem,3vw,2.7rem);line-height:1.05}
+.fm__it p{color:var(--mute);line-height:1.65;font-size:.95rem}
+.fm__it .link{align-self:flex-start}
 
 /* image wipes: card pictures reveal from the top as they enter (competitor mock's wipe) */
 .card__media{transition:clip-path 1.1s var(--ease);clip-path:inset(0 round var(--r))}
 .js .card__media:not(.in){clip-path:inset(0 0 100% 0 round var(--r))}
-.reduced-motion .card__media{clip-path:none!important}.reduced-motion .fpin::before{animation:none}
+.reduced-motion .card__media{clip-path:none!important}
 
 /* ================================================================ home sections between the films
    The brainiac mock's structure (about, services, results, locations, reviews) in the site's own dark navy and gold,
@@ -651,6 +654,10 @@ em{font-style:italic;color:var(--gold-hi)}
 /* ---------- reveal ---------- */
 .rv{opacity:0;transform:translateY(2rem);transition:opacity 1s,transform 1.2s var(--ease)}
 .rv.in{opacity:1;transform:none}
+/* text fills in from the left as it arrives (main.js adds .tw with its own duration --td and delay --tl, then takes it off) */
+.js .tw{-webkit-mask-image:linear-gradient(100deg,#000 42%,rgba(0,0,0,.08) 58%);mask-image:linear-gradient(100deg,#000 42%,rgba(0,0,0,.08) 58%);-webkit-mask-size:260% 100%;mask-size:260% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:100% 0;mask-position:100% 0;
+  transition:-webkit-mask-position var(--td,1s) cubic-bezier(.3,.7,.2,1) var(--tl,0s),mask-position var(--td,1s) cubic-bezier(.3,.7,.2,1) var(--tl,0s)}
+.js .tw.in{-webkit-mask-position:0 0;mask-position:0 0}
 /* every picture arrives instead of just being there: fades up out of a slight zoom (main.js adds .rvi). Uses the separate
    scale property so it never fights a component's own transform. .par pictures also drift against the scroll. */
 .par{--ps:1.14}.par img{scale:var(--ps);will-change:translate,scale}
@@ -677,10 +684,6 @@ em{font-style:italic;color:var(--gold-hi)}
   .cuff__copy{width:min(32rem,100%)}
   .cuff__stage{align-items:flex-end;padding-bottom:14svh}
   .cuff__meta{display:none}
-  .fmap__grid{grid-template-columns:1fr}
-  .fmap__portrait{height:min(62svh,40rem)}
-  .fmap__cards{min-height:12rem;text-align:center;justify-items:center}
-  .fcard{align-items:center}
   .chapter__stage{align-items:flex-end;padding-bottom:16svh}
   .faq,.rows,.appt{grid-template-columns:1fr}
   .faq__head{position:static}
@@ -717,6 +720,12 @@ em{font-style:italic;color:var(--gold-hi)}
   .stk{grid-template-columns:1fr;min-height:0}.stk__vis{min-height:13rem;order:-1}.stk__tx{padding:1.4rem 1.3rem 1.5rem}
   .ltabs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pmq__it span{font-size:.8rem}
+  .fm{height:calc(100svh + var(--n,7) * 56svh)}
+  .fm__stage{grid-template-columns:1fr;grid-template-rows:auto auto 1fr;padding:4.6rem 1.25rem 1rem;align-items:start;row-gap:.6rem}
+  .fm__head{grid-column:1;grid-row:1;align-self:start;gap:.3rem}.fm__head h2{font-size:clamp(1.6rem,7vw,2rem)}.fm__head p{display:none}
+  .fm__fig{grid-column:1;grid-row:2;height:min(46svh,26rem)}
+  .fm__drum{grid-column:1;grid-row:3;margin-top:0;height:100%;max-height:15rem}
+  .fm__it{gap:.45rem}.fm__it h3{font-size:1.6rem}.fm__it p{font-size:.86rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .piece--wide{width:86vw}
   #doctors .piece__media{height:min(46svh,26rem)}
   .sheet .split__media{height:auto;width:100%;max-width:26rem}
@@ -732,12 +741,12 @@ em{font-style:italic;color:var(--gold-hi)}
   .sfilm__trust{display:none}
   .sfilm__cta{gap:1rem}
   .awards{height:auto!important}
-  .awards__stage{position:relative;height:auto;gap:1.6rem;padding:5.5rem 0 3rem}
-  .awards__top{grid-template-columns:1fr;gap:1.4rem;padding:0 1.25rem}.awards__copy h2{font-size:clamp(2rem,8vw,2.6rem)}
-  .awards__proof{grid-template-columns:1fr}.awards__proof b{font-size:1.3rem}
+  .awards__stage{position:relative;height:auto;grid-template-columns:1fr;gap:1.6rem;padding:5.5rem 0 3rem;align-items:start}
+  .awards__copy{max-width:none;padding:0 1.25rem}.awards__copy h2{font-size:clamp(2rem,8vw,2.6rem)}
+  .awards__proof li{padding:.6rem 0;grid-template-columns:4.6rem 1fr}.awards__proof b{font-size:1.3rem}
   .awards.in .awards__proof li,.awards__proof li{opacity:1;transform:none}
-  .awards__row{overflow-x:auto;scroll-snap-type:x mandatory;mask-image:none;-webkit-mask-image:none;scrollbar-width:none}.awards__row::-webkit-scrollbar{display:none}
-  .awards__track{transform:none!important;padding:0 1.25rem 1rem;gap:.8rem}
+  .awards__wall{height:auto;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-mask-image:none;mask-image:none;scrollbar-width:none}.awards__wall::-webkit-scrollbar{display:none}
+  .awards__grid{display:flex;gap:.8rem;padding:0 1.25rem 1rem;transform:none!important;width:max-content}
   .award{width:62vw;scroll-snap-align:start}.award img{height:9rem}
   .pmap{height:520svh}
   .pmap__stage{grid-template-columns:1fr!important;grid-template-rows:1fr 0fr}
