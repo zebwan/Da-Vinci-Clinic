@@ -37,6 +37,23 @@
     }
   } else begin();
 
+  /* ---------- light / dark: the toggle in the nav; the choice is remembered (the <head> applies it before first paint) ---------- */
+  const tbtn = $('[data-theme-toggle]'), tmeta = $('meta[name="theme-color"]');
+  const showTheme = () => { const light = root.dataset.theme === 'light';
+    if (tbtn) { tbtn.setAttribute('aria-pressed', light); tbtn.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode'); }
+    if (tmeta) tmeta.content = light ? '#f7f2e9' : '#07111e'; };
+  const setTheme = light => {
+    if (light) root.dataset.theme = 'light'; else delete root.dataset.theme;
+    try { localStorage.setItem('dv3-theme', light ? 'light' : 'dark'); } catch (e) {}
+    showTheme(); dispatchEvent(new CustomEvent('dv:theme', { detail: light ? 'light' : 'dark' }));
+  };
+  showTheme();
+  if (tbtn) tbtn.addEventListener('click', () => {
+    const light = root.dataset.theme !== 'light';
+    // a cross-fade between the two looks where the browser can do it (View Transitions), an instant switch elsewhere
+    if (document.startViewTransition && !reduced) document.startViewTransition(() => setTheme(light)); else setTheme(light);
+  });
+
   /* ---------- nav: hide on scroll down, show on scroll up; phone menu ---------- */
   const nav = $('.nav'); let lastY = 0;
   const menuBtn = $('.nav__menu');
