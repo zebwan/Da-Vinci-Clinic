@@ -40,14 +40,19 @@ function start() {
   renderer.setClearColor(0x040a13, 1);
   const scene = new THREE.Scene();
   // backdrop = the CSS .bg radial gradient (120% 90% at 50% 38%), dithered against banding
-  const bgMat = new THREE.ShaderMaterial({ depthTest: false, depthWrite: false, blending: THREE.NoBlending, uniforms: { uRes: { value: new THREE.Vector2(1, 1) } },
+  const bgMat = new THREE.ShaderMaterial({ depthTest: false, depthWrite: false, blending: THREE.NoBlending, uniforms: { uRes: { value: new THREE.Vector2(1, 1) }, uPaper: { value: 0 } },
     vertexShader: 'void main(){ gl_Position = vec4(position.xy, 0., 1.); }',
-    fragmentShader: `uniform vec2 uRes;
+    fragmentShader: `uniform vec2 uRes; uniform float uPaper;
       void main(){ vec2 p = gl_FragCoord.xy / uRes; p.y = 1. - p.y;
         float d = length(vec2((p.x - .5) / 1.2, (p.y - .38) / .9));
         vec3 c = mix(vec3(.078,.188,.310), vec3(.047,.114,.200), smoothstep(0., .34, d));
         c = mix(c, vec3(.027,.067,.118), smoothstep(.34, .66, d));
         c = mix(c, vec3(.016,.039,.075), smoothstep(.66, 1., d));
+        // light theme: the same falloff in paper tones (the CSS .bg gradient's light tokens)
+        vec3 l = mix(vec3(.992,.984,.965), vec3(.973,.957,.925), smoothstep(0., .34, d));
+        l = mix(l, vec3(.945,.918,.863), smoothstep(.34, .66, d));
+        l = mix(l, vec3(.914,.878,.808), smoothstep(.66, 1., d));
+        c = mix(c, l, uPaper);
         c += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - .5) / 255.;
         gl_FragColor = vec4(c, 1.); }` });
   const bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat); bg.frustumCulled = false; bg.renderOrder = -1; scene.add(bg);
@@ -247,6 +252,13 @@ function start() {
   });
   const mat = makeMat(false), haloMat = makeMat(true);
   for (const m of [mat, haloMat]) { m.blending = THREE.CustomBlending; m.blendEquation = THREE.AddEquation; m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneFactor; }
+  // light theme: the points SUBTRACT their (warm) colour from the paper instead of adding light, so the same figures appear as a
+  // dark-navy stipple, like an ink study, rather than vanishing white-on-cream
+  const paper = () => document.documentElement.dataset.theme === 'light';
+  const applyTheme = () => { const l = paper(); bgMat.uniforms.uPaper.value = l ? 1 : 0; renderer.setClearColor(l ? 0xf7f2e9 : 0x040a13, 1);
+    // colour only: the alpha channel is left alone (subtracting it too punched see-through holes in the canvas)
+    for (const m of [mat, haloMat]) { m.blendEquation = l ? THREE.ReverseSubtractEquation : THREE.AddEquation; m.blendEquationAlpha = THREE.AddEquation; m.blendSrcAlpha = THREE.ZeroFactor; m.blendDstAlpha = THREE.OneFactor; m.needsUpdate = true; } dirty = true; };
+  addEventListener('dv:theme', () => applyTheme());
   const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.renderOrder = 1;
   const halo = new THREE.Points(haloGeo, haloMat); halo.frustumCulled = false; halo.renderOrder = 0;
   const group = new THREE.Group(); group.add(halo); group.add(pts); scene.add(group);
@@ -297,7 +309,7 @@ function start() {
   }
 
   const resize = () => { renderer.setSize(innerWidth, innerHeight, false); renderer.getDrawingBufferSize(bgMat.uniforms.uRes.value); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); layout(); dirty = true; };
-  resize(); addEventListener('resize', resize);
+  resize(); addEventListener('resize', resize); applyTheme();
   new ResizeObserver(() => layout()).observe(document.body);
   preloadNear(scrollY);
   anchors.forEach(a => setTimeout(() => load(a.shape), 1500));
@@ -359,5 +371,5 @@ function start() {
   }
   requestAnimationFrame(frame);
   root.classList.add('has-gl'); root.classList.remove('no-gl');
-  window.__pt = { anchors, shapes, U, layout };
+  window.__pt = { anchors, shapes, U, layout, mats: [mat, haloMat], bgMat };
 }
