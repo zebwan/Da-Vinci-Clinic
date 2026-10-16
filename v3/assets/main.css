@@ -176,8 +176,6 @@ em{font-style:italic;color:var(--gold-hi)}
 /* ---------- 2b scroll film: the camera move around the bust, one frame per scroll step ---------- */
 .sfilm{position:relative;height:calc(var(--h,250) * 1svh);--fh:var(--h,250)}
 .sfilm__stage{position:sticky;top:0;height:100svh;overflow:hidden}
-.sfilm__stage::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgb(var(--pg) / .85) 0,rgb(var(--pg) / 0) 11%,rgb(var(--pg) / 0) 87%,rgb(var(--pg) / .9) 100%)}
-.sfilm--hero .sfilm__stage::after{background:linear-gradient(180deg,rgb(var(--pg) / 0) 87%,rgb(var(--pg) / .9) 100%)}
 .sfilm__poster,.sfilm__canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:calc(1 - var(--hand,0))}
 .sfilm__canvas{opacity:0;transition:opacity .5s}.sfilm.is-ready .sfilm__canvas{opacity:calc(1 - var(--hand,0));transition:none}
 .sfilm.is-ready .sfilm__poster{opacity:0}
@@ -207,7 +205,6 @@ em{font-style:italic;color:var(--gold-hi)}
 .vband{position:relative;min-height:max(100svh,34rem);display:flex;align-items:center;overflow:hidden}
 .vband__media{position:absolute;inset:0;background:var(--void)}
 .vband__media video{width:100%;height:100%;object-fit:cover;display:block}
-.vband__media::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgb(var(--pg) / .9) 0,rgb(var(--pg) / 0) 13%,rgb(var(--pg) / 0) 85%,rgb(var(--pg) / .92) 100%)}
 .vband__tx{position:relative;z-index:2;width:min(31rem,38vw);margin:0 var(--pad);display:flex;flex-direction:column;gap:1rem}
 .vband__tx--r{margin-left:auto}
 .vband__tx--c{margin:auto auto 12svh;align-self:flex-end;width:min(42rem,88vw);align-items:center;text-align:center}
@@ -766,7 +763,6 @@ em{font-style:italic;color:var(--gold-hi)}
   .sfilm{height:calc(var(--hm,230) * 1svh);--fh:var(--hm,230)}
   .vband{min-height:0;flex-direction:column;align-items:stretch}
   .vband__media{position:relative;inset:auto;aspect-ratio:4/5}
-  .vband__media::after{background:linear-gradient(180deg,rgb(var(--pg) / .9) 0,rgb(var(--pg) / 0) 12%,rgb(var(--pg) / 0) 70%,rgb(var(--pg) / 1) 100%)}
   .vband__tx,.vband__tx--c{width:auto;margin:-5rem 1.25rem 3rem;padding:1.3rem 1.3rem 1.4rem;border-radius:var(--r);background:rgb(var(--pn) / .88);box-shadow:inset 0 0 0 1px rgb(var(--gl) / .22);align-self:stretch}
   .vband__tx h2{font-size:clamp(1.9rem,8.4vw,2.5rem)}
   .sfilm__ch--hero{width:auto;gap:.7rem}
