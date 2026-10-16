@@ -379,15 +379,13 @@
     const loop = () => {
       // progress from Lenis's own (fractional) scroll value: the page's scrollY is rounded to whole pixels, so at a slow scroll
       // it moves on some display frames and not others; the animated value moves on every one
-      raf = 0; const y = lenis ? lenis.animatedScroll : scrollY, H = innerHeight, rt = sf._top - y, rb = rt + sf._h;
+      raf = 0; const y = lenis ? lenis.animatedScroll : scrollY, H = innerHeight;
       const p = clamp((y - sf._top) / Math.max(1, sf._h - H)), pos = p * (n - 1), f = Math.round(pos);      // direct: the scroll is already smoothed by Lenis; a second easing only adds lag
       if (f !== cur) { dir = f > cur ? 1 : -1; cur = f; warm(); if (started) pump(); }
       if (Math.abs(pos - shown) > .002) draw(pos);
       chs.forEach(c => c.classList.toggle('on', p >= +c.dataset.from && p <= +c.dataset.to));
       put(bar, 'transform', `scaleX(${p.toFixed(4)})`);
       if (hint) put(hint, 'opacity', (1 - clamp(p * 12)).toFixed(3));
-      // fade in as the stage rises into view and out as it leaves, so each film dissolves into the page around it
-      put(stage, 'opacity', Math.min(smooth(clamp(1 - rt / (H * .85))), smooth(clamp(rb / (H * .85)))).toFixed(3));
       if (hand) put(sf, '--hand', smooth(clamp((p - +hand.dataset.from) / Math.max(.001, +hand.dataset.to - +hand.dataset.from))).toFixed(3));
       if (visible) raf = requestAnimationFrame(loop);
     };
