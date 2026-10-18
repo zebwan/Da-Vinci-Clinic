@@ -69,8 +69,21 @@
   // every picture gets an entrance (the user: after the films, still pictures felt static). Pictures that a section already
   // animates with the scroll (film, study, face study, takeover, lookbook, heritage, before/after) keep their own motion.
   const SKIP = '.sfilm, .pt-fb, .study, .pmap, .takeover, .lookbook, .heritage, .cmp, .pmq, .orbit, .nav, .overlay, .film, .footer';
-  const iio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); iio.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
-  if (!reduced) $$('main img').forEach(im => { if (im.closest(SKIP)) return; im.classList.add('rvi'); iio.observe(im); });
+  // The same soft-edged wipe as the text, unhurried: tall pictures rise from the bottom, wide ones sweep in from the left,
+  // with a slight settle; pictures in a row (cards, track pieces, trophies) follow one another. The mask comes off after.
+  const iio = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; const im = e.target; iio.unobserve(im); im.classList.add('in');
+    setTimeout(() => im.classList.remove('rvi', 'rvi--x', 'in'), im._tt * 1000 + 250);
+  }), { rootMargin: '0px 0px -6% 0px' });
+  if (!reduced) $$('main img').forEach(im => {
+    if (im.closest(SKIP)) return;
+    const w = +im.getAttribute('width') || im.naturalWidth, h = +im.getAttribute('height') || im.naturalHeight, box = im.parentElement.getBoundingClientRect();
+    const wide = box.width && box.height ? box.width > box.height * 1.2 : w > h * 1.2;
+    const item = im.closest('.card, .piece, .award, .stk, .loc, figure'), k = item && item.parentElement ? Math.min(5, Math.max(0, [...item.parentElement.children].indexOf(item))) : 0;
+    const d = 1.9, l = .1 + k * .16;
+    im.style.setProperty('--td', d + 's'); im.style.setProperty('--tl', l.toFixed(2) + 's'); im._tt = d + l + .6;
+    im.classList.add('rvi'); if (wide) im.classList.add('rvi--x'); iio.observe(im);
+  });
 
   /* ---------- text arrives: every heading, line and link fills in from the left as it scrolls into view ----------
      A soft mask edge sweeps across each block (the unfilled part waits at a faint 8%). Order of importance sets the timing:
@@ -79,14 +92,14 @@
   if (!reduced) {
     const TXT = 'main h1, main h2, main h3, main p, main li, main .eyebrow, main .link, main .btn, main dt, main dd, main blockquote, main figcaption, main .tab, main .ltab, main .faq__q, main .acc__q, main .stats > div, main .rows__item > *, .footer b, .footer a, .footer p';
     const OWN = '.sfilm__ch:not(.sfilm__ch--hero), .fm__drum, .pmq, .orbit, .scenes, .chapter, .pmap, .variants, .cuff, .study, .takeover, .lookbook, [data-words], .heritage__word, .awards__proof, .overlay, .menu, .faq__a, .acc__a';
-    const timing = el => el.matches('h1, h2, .section-title') ? [.85, 0] : el.matches('h3') ? [.95, .08] : el.matches('.eyebrow') ? [.8, .14] : el.matches('.link, .btn, .tab, .ltab') ? [.9, .42] : [1.25, .24];
+    const timing = el => el.matches('h1, h2, .section-title') ? [1.4, 0] : el.matches('h3') ? [1.55, .14] : el.matches('.eyebrow') ? [1.3, .24] : el.matches('.link, .btn, .tab, .ltab') ? [1.45, .7] : [2, .4];
     const tio = new IntersectionObserver(es => es.forEach(e => {
       if (!e.isIntersecting) return; const el = e.target; tio.unobserve(el); el.classList.add('in');
       setTimeout(() => el.classList.remove('tw', 'in'), el._tt * 1000 + 150);
     }), { rootMargin: '0px 0px -8% 0px' });
     $$(TXT).forEach(el => {
       if (el.closest(OWN) || (el.parentElement && el.parentElement.closest('.tw')) || !el.textContent.trim() || !el.getClientRects().length) return;
-      const [d, l0] = timing(el), l = l0 + (el.matches('li, dt, dd, .stats > div, .rows__item > *') ? Math.min(6, [...el.parentElement.children].indexOf(el)) * .06 : 0);
+      const [d, l0] = timing(el), l = l0 + (el.matches('li, dt, dd, .stats > div, .rows__item > *') ? Math.min(6, [...el.parentElement.children].indexOf(el)) * .1 : 0);
       el.style.setProperty('--td', d + 's'); el.style.setProperty('--tl', l.toFixed(2) + 's'); el._tt = d + l;
       el.classList.add('tw'); tio.observe(el);
     });

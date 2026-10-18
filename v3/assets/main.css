@@ -69,25 +69,25 @@ em{font-style:italic;color:var(--gold-hi)}
 /* the nav sits in a "liquid glass" pill so it reads over anything, the films included: a tinted, blurred, saturated pane with
    a bright rim on top, a faint one below and a soft sheen (Chris: the links were lost against the sculpture) */
 .nav{position:fixed;top:clamp(.6rem,1.2vw,1rem);left:max(.6rem,calc(var(--pad) - 1.3rem));right:max(.6rem,calc(var(--pad) - 1.3rem));z-index:50;display:flex;justify-content:space-between;align-items:center;gap:1.2rem;
-  padding:.5rem .5rem .5rem 1.3rem;border-radius:999px;isolation:isolate;
-  background:linear-gradient(180deg,rgb(var(--glass) / .52),rgb(var(--glass) / .3));
-  -webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);
-  box-shadow:inset 0 1px 0 rgb(255 255 255 / .24),inset 0 -1px 0 rgb(255 255 255 / .07),inset 0 0 0 1px rgb(255 255 255 / .1),0 14px 36px -14px rgb(var(--shadow) / calc(.55 * var(--shk) + .1));
+  padding:.5rem .6rem .5rem 1.6rem;border-radius:999px;isolation:isolate;
+  background:linear-gradient(180deg,rgb(var(--glass) / .3),rgb(var(--glass) / .14));
+  -webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .28),inset 0 -1px 0 rgb(255 255 255 / .08),inset 0 0 0 1px rgb(255 255 255 / .12),0 14px 40px -16px rgb(var(--shadow) / calc(.5 * var(--shk) + .08));
   transition:transform .7s var(--ease),opacity .6s,background .5s}
 .nav::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
   background:radial-gradient(120% 160% at 12% -60%,rgb(255 255 255 / .2),transparent 55%),radial-gradient(80% 140% at 95% 160%,rgb(255 255 255 / .08),transparent 60%)}
 .nav.is-hidden{transform:translateY(calc(-100% - 1.6rem))}
-.nav__word img{height:2.1rem;width:auto}.nav__word img+img{display:none}
-[data-theme=light] .nav{background:linear-gradient(180deg,rgb(var(--glass) / .84),rgb(var(--glass) / .68))}
-[data-theme=light] .nav__word img{display:none}[data-theme=light] .nav__word img+img{display:block}
+/* the client's own gold logo, at the size of their current site's header (60 px tall on desktop, 50 px on phones) */
+.nav__word img{height:3.75rem;width:auto;filter:drop-shadow(0 1px 6px rgb(var(--shadow) / calc(.35 * var(--shk))))}
+[data-theme=light] .nav{background:linear-gradient(180deg,rgb(var(--glass) / .58),rgb(var(--glass) / .4))}
 .nav__end{display:flex;align-items:center;gap:.6rem}
-.nav__theme{width:2.35rem;height:2.35rem;border-radius:50%;display:grid;place-items:center;color:var(--cream);box-shadow:inset 0 0 0 1px rgb(var(--gl) / .35);transition:background .3s,color .3s}
+.nav__theme{width:2.7rem;height:2.7rem;border-radius:50%;display:grid;place-items:center;color:var(--cream);box-shadow:inset 0 0 0 1px rgb(var(--gl) / .35);transition:background .3s,color .3s}
 .nav__theme:hover{background:rgb(var(--gl) / .14);color:var(--gold-hi)}
 .nav__theme svg{width:1.05rem;height:1.05rem}.nav__theme .i-sun{display:none}[data-theme=light] .nav__theme .i-sun{display:block}[data-theme=light] .nav__theme .i-moon{display:none}
-.nav__links{display:flex;align-items:center;gap:2rem}
-.nav__links a{font-size:.85rem;font-weight:600;color:var(--cream);opacity:.82;transition:opacity .3s,color .3s}
+.nav__links{display:flex;align-items:center;gap:2.2rem}
+.nav__links a{font-size:.92rem;font-weight:600;color:var(--cream);opacity:.88;transition:opacity .3s,color .3s;text-shadow:0 1px 10px rgb(var(--sh) / .55)}
 .nav__links a:hover,.nav__links a[aria-current]{opacity:1;color:var(--gold-hi)}
-.nav__links .nav__book{opacity:1;color:var(--ink);background:var(--gold);padding:.55rem 1.15rem;border-radius:999px}
+.nav__links .nav__book{opacity:1;color:var(--ink);background:var(--gold);padding:.75rem 1.4rem;border-radius:999px;text-shadow:none}
 .nav__links .nav__book:hover{background:var(--gold-hi);color:var(--ink)}
 .nav__menu{display:none;align-items:center;gap:.7rem;font-size:.85rem;font-weight:700}
 .nav__menu i{display:flex;flex-direction:column;gap:5px;width:20px}.nav__menu i::before,.nav__menu i::after{content:"";height:1px;background:currentColor;transition:transform .5s var(--ease)}
@@ -355,7 +355,7 @@ em{font-style:italic;color:var(--gold-hi)}
 
 /* image wipes: card pictures reveal from the top as they enter (competitor mock's wipe) */
 .card__media{transition:clip-path 1.1s var(--ease);clip-path:inset(0 round var(--r))}
-.js .card__media:not(.in){clip-path:inset(0 0 100% 0 round var(--r))}
+
 .reduced-motion .card__media{clip-path:none!important}
 
 /* ================================================================ home sections between the films
@@ -613,10 +613,8 @@ em{font-style:italic;color:var(--gold-hi)}
 
 /* ---------- inner sections: editorial split, info rows, map, prose, form ---------- */
 .split{position:relative;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:clamp(2rem,6vw,7rem);padding:11vh var(--pad)}
-.split__media{position:relative;aspect-ratio:4/5;overflow:hidden;border-radius:var(--r);border:1px solid rgb(var(--gl) / .16);clip-path:inset(12% 10% round var(--r));transition:clip-path 1.4s var(--ease)}
-.split__media.in{clip-path:inset(0 round var(--r))}
-.split__media img{width:100%;height:100%;object-fit:cover;transform:scale(1.08);transition:transform 1.8s var(--ease)}
-.split__media.in img{transform:none}
+.split__media{position:relative;aspect-ratio:4/5;overflow:hidden;border-radius:var(--r);border:1px solid rgb(var(--gl) / .16);clip-path:inset(0 round var(--r))}
+.split__media img{width:100%;height:100%;object-fit:cover}
 .split--photo .split__media{background:#d9dde2;aspect-ratio:914/1080}.split--photo .split__media img{object-position:50% 0;transform:none!important}
 .split__copy{display:flex;flex-direction:column;gap:1.2rem;max-width:36rem}
 .split__copy h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.2rem,4.4vw,4rem);line-height:1.05}
@@ -687,13 +685,17 @@ em{font-style:italic;color:var(--gold-hi)}
 .rv.in{opacity:1;transform:none}
 /* text fills in from the left as it arrives (main.js adds .tw with its own duration --td and delay --tl, then takes it off) */
 .js .tw{-webkit-mask-image:linear-gradient(100deg,#000 42%,rgba(0,0,0,.08) 58%);mask-image:linear-gradient(100deg,#000 42%,rgba(0,0,0,.08) 58%);-webkit-mask-size:260% 100%;mask-size:260% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:100% 0;mask-position:100% 0;
-  transition:-webkit-mask-position var(--td,1s) cubic-bezier(.3,.7,.2,1) var(--tl,0s),mask-position var(--td,1s) cubic-bezier(.3,.7,.2,1) var(--tl,0s)}
+  transition:-webkit-mask-position var(--td,1s) cubic-bezier(.5,.08,.25,1) var(--tl,0s),mask-position var(--td,1s) cubic-bezier(.5,.08,.25,1) var(--tl,0s)}
 .js .tw.in{-webkit-mask-position:0 0;mask-position:0 0}
-/* every picture arrives instead of just being there: fades up out of a slight zoom (main.js adds .rvi). Uses the separate
-   scale property so it never fights a component's own transform. .par pictures also drift against the scroll. */
+/* every picture arrives the way the text does: a soft-edged mask sweeps it in, bottom to top (or left to right for wide ones,
+   .rvi--x), while it settles from a slight zoom (the separate scale property, so it never fights a component's own
+   transform). main.js sets --td / --tl and takes the classes off afterwards. .par pictures also drift against the scroll. */
 .par{--ps:1.14}.par img{scale:var(--ps);will-change:translate,scale}
-.js .rvi{opacity:0;scale:1.12;transition:opacity 1.2s ease,scale 1.8s var(--ease)}
-.js .rvi.in{opacity:1;scale:var(--ps,1)}
+.js .rvi{-webkit-mask-image:linear-gradient(0deg,#000 42%,transparent 58%);mask-image:linear-gradient(0deg,#000 42%,transparent 58%);-webkit-mask-size:100% 260%;mask-size:100% 260%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:0 0;mask-position:0 0;
+  scale:calc(var(--ps,1) * 1.06);transition:-webkit-mask-position var(--td,1.9s) cubic-bezier(.5,.08,.25,1) var(--tl,0s),mask-position var(--td,1.9s) cubic-bezier(.5,.08,.25,1) var(--tl,0s),scale calc(var(--td,1.9s) + .6s) var(--ease) var(--tl,0s)}
+.js .rvi.in{-webkit-mask-position:0 100%;mask-position:0 100%;scale:var(--ps,1)}
+.js .rvi--x{-webkit-mask-image:linear-gradient(90deg,#000 42%,transparent 58%);mask-image:linear-gradient(90deg,#000 42%,transparent 58%);-webkit-mask-size:260% 100%;mask-size:260% 100%;-webkit-mask-position:100% 0;mask-position:100% 0}
+.js .rvi--x.in{-webkit-mask-position:0 0;mask-position:0 0}
 .piece--photo .rvi,.piece--wide .rvi,.card--photo .rvi,.split--photo .rvi{scale:1!important}
 .d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}
 
@@ -730,7 +732,7 @@ em{font-style:italic;color:var(--gold-hi)}
 }
 @media (max-width:767px){
   body{font-size:.98rem}
-  .nav{padding:.4rem .4rem .4rem 1rem}.nav__word img{height:1.8rem}.nav__menu{padding:0 .5rem}
+  .nav{padding:.4rem .45rem .4rem 1.1rem}.nav__word img{height:3.1rem}.nav__menu{padding:0 .5rem}.nav__theme{width:2.5rem;height:2.5rem}
   .hero__word{font-size:clamp(3rem,15vw,5rem);white-space:nowrap}
   .phero .hero__stick{padding-bottom:12svh}
   .manifesto{min-height:95vh}
@@ -752,9 +754,9 @@ em{font-style:italic;color:var(--gold-hi)}
   .ltabs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pmq__it span{font-size:.8rem}
   .fm{height:calc(100svh + var(--n,7) * 56svh)}
-  .fm__stage{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:4.4rem 1.25rem .6rem;align-items:start;row-gap:.4rem}
+  .fm__stage{grid-template-columns:1fr;grid-template-rows:auto auto auto;align-content:start;padding:5.2rem 1.25rem .6rem;align-items:start;row-gap:.4rem}
   .fm__head{grid-column:1;grid-row:1;align-self:start;gap:.25rem}.fm__head h2{font-size:clamp(1.45rem,6.4vw,1.85rem)}.fm__head p{display:none}
-  .fm__fig{grid-column:1;grid-row:2;height:clamp(10rem,calc(100svh - 26rem),26rem)}
+  .fm__fig{grid-column:1;grid-row:2;height:clamp(10rem,calc(100svh - 26.8rem),26rem)}
   .fm__drum{grid-column:1;grid-row:3;margin-top:0;height:15.5rem;--fz:1.9rem}
   .fm__it{gap:.4rem;right:3.9rem}.fm__it h3{font-size:1.45rem}.fm__it p{font-size:.84rem;line-height:1.55}
   .piece--wide{width:86vw}
